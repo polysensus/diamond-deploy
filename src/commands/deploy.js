@@ -55,66 +55,11 @@ export async function deployNewDiamond(program, options) {
   var result;
   if (deployer.canDeploy()) {
     result = await deployer.deploy();
-    if (result.isErr()) exit(result.errmsg(), 1)
+    if (result.isErr()) exit(result.errmsg(), 1);
   }
 
   if (isOffline()) {
     deployer.report();
   }
   exitok(result.msg);
-}
-
-export function listSelectors(program, options) {
-  const r = Reporter.fromVerbosity(options.verbose);
-
-  const loader = new FoundryFileLoader(options, r);
-  loader.addDirectoryFinders(...options.directories);
-
-  loader.load();
-
-  const found = new FacetDistinctSelectorSet();
-
-  for (const [name, iface, fileName, finder] of loader.list()) {
-    const co = new FacetCutOpts({
-      name,
-      fileName,
-      commonName: finder.commonName(fileName),
-      finderName: finder.constructor.name,
-      readerName: finder.reader.constructor.name,
-      selectors: [],
-      signatures: [],
-    });
-
-    for (const sel of new Selectors(iface).all()) {
-      const f = iface.getFunction(sel);
-      co.selectors.push(sel);
-      co.signatures.push(f.format());
-    }
-    found.addFacet(co);
-  }
-
-  if (found.collisions.length != 0) {
-    r.out("*** collisions ***");
-    for (const col of found.collisions) {
-      const [toremove, conflicted] = col;
-      r.out(`Conflicts found when adding ${conflicted[0].name}`);
-      r.out(" ", toremove.join(", "));
-      r.out(
-        `  with: ${conflicted
-          .map((con) => [con.commonName, con.name].join(":"))
-          .join(", ")}`
-      );
-    }
-
-    process.exit(1);
-  }
-
-  if (options.format == "json") {
-    r.out(found.toJson());
-    return;
-  }
-
-  for (const co of found.toLines()) {
-    r.out(co.join("\n"));
-  }
 }

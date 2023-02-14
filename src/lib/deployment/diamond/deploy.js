@@ -35,7 +35,9 @@ export class DeployResult {
   isErr() {
     return this.status || this.err?.constructor?.name === "Error";
   }
-  errmsg() {return this.msg || `${this.err} ${this.status}`}
+  errmsg() {
+    return this.msg || `${this.err} ${this.status}`;
+  }
 }
 
 export class DiamondDeployer {
@@ -123,9 +125,18 @@ export class DiamondDeployer {
       initCalldata
     );
     const receipt = await tx.wait();
-    if (!receipt.status) return DeployResult.fromFaiedReceipt(receipt, tx, `Diamond upgrade failed: ${tx.hash}`);
+    if (!receipt.status)
+      return DeployResult.fromFaiedReceipt(
+        receipt,
+        tx,
+        `Diamond upgrade failed: ${tx.hash}`
+      );
 
-    return DeployResult.fromSuccess(tx, receipt, `Diamond upgrade success: ${tx.hash}`);
+    return DeployResult.fromSuccess(
+      tx,
+      receipt,
+      `Diamond upgrade success: ${tx.hash}`
+    );
   }
 
   reporterrs() {

@@ -4,7 +4,8 @@ dotenv.config();
 
 import { program, Option } from "commander";
 
-import { deployNewDiamond, listSelectors } from "./src/commands/deploy.js";
+import { deployNewDiamond } from "./src/commands/deploy.js";
+import { listSelectors } from "./src/commands/list.js";
 
 program.addOption(
   new Option(
@@ -55,7 +56,8 @@ produce output that can be consumed by deploy-new and deploy`
     "facet is the only supported class for now"
   )
   .option("-n, --names <names...>")
-  .option("-F, --format <format>")
+  .option("-F, --format <format>", "'json' | 'info' | 'table'. defaults to 'table'")
+  .option("-a, --absoloute", "output absoloute filenames")
   .action((options) => listSelectors(program, options));
 
 program.parse();

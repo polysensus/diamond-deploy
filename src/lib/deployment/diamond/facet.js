@@ -38,11 +38,17 @@ export class FacetSelectorSet {
    * Note that *each* item is a set of lines describing a single {@link FacetCutOpts}
    * @returns {[FacetCutOpts.toLines]}
    */
-  *toLines() {
+  *toLines(fullNames = false) {
     for (const co of this.cutterOpts) {
-      yield co.toLines();
+      yield co.toLines(fullNames);
     }
   }
+  *toStructuredLines(fullNames = false) {
+    for (const co of this.cutterOpts) {
+      yield co.toStructuredLines(fullNames);
+    }
+  }
+
 
   *toObjects() {
     for (const co of this.cutterOpts) {
@@ -99,7 +105,9 @@ export class FacetDistinctSelectorSet extends FacetSelectorSet {
       this.collisions.push([toremove, conflicted]);
     }
     this.cutterOpts.push(co);
-    this.signatures = { ...this.signatures, ...toadd };
+    for (const [sig, co] of toadd) {
+      this.signatures[sig] = [...this.signatures[sig], co]
+    }
   }
 }
 
@@ -141,14 +149,35 @@ export class FacetCutOpts {
 
   /**
    *
-   * @returns {["name, commonName", ..."selector signature"]}
+   * @returns {["name, commonName | fileName"], [..."  selector signature"]}
    */
-  toLines() {
-    const parts = [`${this.name} ${this.commonName}`];
+  toStructuredLines(fullNames = false) {
+    const parts = [`${this.name} ${fullNames ? this.fileName : this.commonName}`];
     for (var i = 0; i < this.selectors.length; i++) {
       parts.push(`  ${this.selectors[i]} ${this.signatures[i]}`);
     }
     return parts;
+  }
+
+  /** Return the cut information as rows for table like accumulation.
+   *
+   * @param {boolean} fullNames if true put the fileName in the row rather than the commonName.
+   * Note that if you join each row into a single line and sort along with the
+   * rows from other cuts you will see the clashes due to lexical ordering
+   * @returns {["selector", "signature", "name", "commonName" | "fileName"]}
+   */
+  *toRows(fullNames = false) {
+    for (var i = 0; i < this.selectors.length; i++) {
+      yield [
+        this.selectors[i],
+        this.signatures[i],
+        this.name,
+        fullNames ? this.fileName : this.commonName
+      ];
+    }
+  }
+  toLines(fullNames = false) {
+    return [...this.toRows(fullNames)];
   }
   toObject() {
     return {
