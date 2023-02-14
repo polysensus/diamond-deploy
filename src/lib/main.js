@@ -6,7 +6,7 @@ import {
 } from "./deployment/finder.js";
 import { DiamondDeployer } from "./deployment/diamond/deploy.js";
 import {
-  FacetDistinctSelectorSet,
+  FacetSelectorSet,
   FacetCutOpts,
 } from "./deployment/diamond/facet.js";
 import { Reporter } from "./reporter.js";
@@ -19,7 +19,7 @@ export {
   stripFinderRoot,
   DiamondDeployer,
   FacetCutOpts,
-  FacetDistinctSelectorSet,
+  FacetSelectorSet,
   Reporter,
   Selectors,
 };
