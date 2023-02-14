@@ -14,18 +14,17 @@ export class FacetSelectorSet {
 
   *resolve() {
     for (const [start, end] of this.conflictedRowSlices()) {
-        yield this.table.slice(start, end);
+      yield this.table.slice(start, end);
     }
   }
 
   *conflictedRowSlices() {
-
-    this.table.sort((a, b) => a[0] < b[0] ? - 1 : (a[0] > b[0] ? 1 : 0));
+    this.table.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
 
     // detect sequential runs of matching selectors
-    var istart = 0
+    var istart = 0;
     for (var i = 1; i < this.table.length; i++) {
-      if (this.table[istart][0] === this.table[i][0]) continue
+      if (this.table[istart][0] === this.table[i][0]) continue;
 
       // different, we either have two consencutive items which are different
       // OR we have a run of collisions in [istart - i)
@@ -35,7 +34,6 @@ export class FacetSelectorSet {
       istart = i;
     }
   }
-
 
   /** Add a list of facets. Each entry may optionaly be an object representation
    * of or an instance of {@link FacetCutOpts}
@@ -57,7 +55,7 @@ export class FacetSelectorSet {
    */
   addFacet(co) {
     this.cutterOpts.push(co);
-    this.table.push(...co.toRows())
+    this.table.push(...co.toRows());
   }
 
   /**

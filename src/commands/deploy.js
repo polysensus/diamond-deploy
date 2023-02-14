@@ -6,9 +6,7 @@ import { DiamondDeployer } from "../lib/deployment/diamond/deploy.js";
 
 import { FileReader } from "../lib/deployment/filefinder/reader.js";
 import { Reporter } from "../lib/reporter.js";
-import {
-  FacetCutOpts,
-} from "../lib/deployment/diamond/facet.js";
+import { FacetCutOpts } from "../lib/deployment/diamond/facet.js";
 
 const readers = {
   FileReader: new FileReader(),

@@ -36,7 +36,7 @@ export function listSelectors(program, options) {
     found.addFacet(co);
   }
 
-  const collisions = [...found.resolve()]
+  const collisions = [...found.resolve()];
 
   var rowOut = function (rows) {
     r.out(
@@ -49,7 +49,7 @@ export function listSelectors(program, options) {
         )
         .join("\n")
     );
-  }
+  };
 
   if (options.format == "json") {
     r.out(found.toJson());
@@ -66,17 +66,17 @@ export function listSelectors(program, options) {
 
   if (options.format !== "json" && options.format !== "info") {
     for (const rows of found.toLines(options.absoloute)) {
-      if (!rows.length) continue
-      rowOut(rows)
+      if (!rows.length) continue;
+      rowOut(rows);
     }
   }
 
   if (collisions.length != 0) {
     r.out("*** collisions ***");
     for (const rows of collisions) {
-      rowOut(rows)
+      rowOut(rows);
     }
-    process.exit(1)
+    process.exit(1);
   }
-  process.exit(0)
+  process.exit(0);
 }
