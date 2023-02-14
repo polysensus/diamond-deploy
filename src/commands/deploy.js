@@ -1,15 +1,12 @@
 import { programConnect } from "./connect.js";
 import { resolveHardhatKey } from "./hhkeys.js";
 import { readJson } from "./fsutil.js";
-import { Selectors } from "../lib/deployment/diamond/selectors.js";
 
 import { DiamondDeployer } from "../lib/deployment/diamond/deploy.js";
 
-import { FoundryFileLoader } from "../lib/deployment/loadersfs/foundry/loader.js";
 import { FileReader } from "../lib/deployment/filefinder/reader.js";
 import { Reporter } from "../lib/reporter.js";
 import {
-  FacetDistinctSelectorSet,
   FacetCutOpts,
 } from "../lib/deployment/diamond/facet.js";
 

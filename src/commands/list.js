@@ -3,7 +3,7 @@ import { Selectors } from "../lib/deployment/diamond/selectors.js";
 import { FoundryFileLoader } from "../lib/deployment/loadersfs/foundry/loader.js";
 import { Reporter } from "../lib/reporter.js";
 import {
-  FacetDistinctSelectorSet,
+  FacetSelectorSet,
   FacetCutOpts,
 } from "../lib/deployment/diamond/facet.js";
 
@@ -15,7 +15,7 @@ export function listSelectors(program, options) {
 
   loader.load();
 
-  const found = new FacetDistinctSelectorSet();
+  const found = new FacetSelectorSet();
 
   for (const [name, iface, fileName, finder] of loader.list()) {
     const co = new FacetCutOpts({
@@ -36,20 +36,19 @@ export function listSelectors(program, options) {
     found.addFacet(co);
   }
 
-  if (found.collisions.length != 0) {
-    r.out("*** collisions ***");
-    for (const col of found.collisions) {
-      const [toremove, conflicted] = col;
-      r.out(`Conflicts found when adding ${conflicted[0].name}`);
-      r.out(" ", toremove.join(", "));
-      r.out(
-        `  with: ${conflicted
-          .map((con) => [con.commonName, con.name].join(":"))
-          .join(", ")}`
-      );
-    }
+  const collisions = [...found.resolve()]
 
-    process.exit(1);
+  var rowOut = function (rows) {
+    r.out(
+      rows
+        .map((row) =>
+          [
+            ...row.slice(0, row.length - 2),
+            row[options.absoloute ? row.length - 1 : row.length - 2],
+          ].join(" ")
+        )
+        .join("\n")
+    );
   }
 
   if (options.format == "json") {
@@ -65,7 +64,19 @@ export function listSelectors(program, options) {
     return;
   }
 
-  for (const co of found.toLines(options.absoloute)) {
-    r.out(co.map(row => row.join(" ")).join("\n"));
+  if (options.format !== "json" && options.format !== "info") {
+    for (const rows of found.toLines(options.absoloute)) {
+      if (!rows.length) continue
+      rowOut(rows)
+    }
   }
+
+  if (collisions.length != 0) {
+    r.out("*** collisions ***");
+    for (const rows of collisions) {
+      rowOut(rows)
+    }
+    process.exit(1)
+  }
+  process.exit(0)
 }

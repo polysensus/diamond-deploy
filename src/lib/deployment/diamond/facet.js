@@ -9,7 +9,33 @@ export class FacetSelectorSet {
   }
   reset() {
     this.cutterOpts = [];
+    this.table = [];
   }
+
+  *resolve() {
+    for (const [start, end] of this.conflictedRowSlices()) {
+        yield this.table.slice(start, end);
+    }
+  }
+
+  *conflictedRowSlices() {
+
+    this.table.sort((a, b) => a[0] < b[0] ? - 1 : (a[0] > b[0] ? 1 : 0));
+
+    // detect sequential runs of matching selectors
+    var istart = 0
+    for (var i = 1; i < this.table.length; i++) {
+      if (this.table[istart][0] === this.table[i][0]) continue
+
+      // different, we either have two consencutive items which are different
+      // OR we have a run of collisions in [istart - i)
+      if (i - istart > 1) {
+        yield [istart, i];
+      }
+      istart = i;
+    }
+  }
+
 
   /** Add a list of facets. Each entry may optionaly be an object representation
    * of or an instance of {@link FacetCutOpts}
@@ -31,6 +57,7 @@ export class FacetSelectorSet {
    */
   addFacet(co) {
     this.cutterOpts.push(co);
+    this.table.push(...co.toRows())
   }
 
   /**
@@ -38,9 +65,9 @@ export class FacetSelectorSet {
    * Note that *each* item is a set of lines describing a single {@link FacetCutOpts}
    * @returns {[FacetCutOpts.toLines]}
    */
-  *toLines(fullNames = false) {
+  *toLines() {
     for (const co of this.cutterOpts) {
-      yield co.toLines(fullNames);
+      yield co.toLines();
     }
   }
   *toStructuredLines(fullNames = false) {
@@ -48,7 +75,6 @@ export class FacetSelectorSet {
       yield co.toStructuredLines(fullNames);
     }
   }
-
 
   *toObjects() {
     for (const co of this.cutterOpts) {
@@ -58,56 +84,6 @@ export class FacetSelectorSet {
 
   toJson() {
     return JSON.stringify([...this.toObjects()], null, 2);
-  }
-}
-
-/**
- * FacetDistinctSelectoSet accumulates a set of {@link FacetCutOpts} ensuring all the
- * selectors are distinct Collisions are detected, removed and collected for
- * further processing.
- */
-export class FacetDistinctSelectorSet extends FacetSelectorSet {
-  constructor() {
-    super();
-    this.reset();
-  }
-  reset() {
-    super.reset();
-    this.signatures = {};
-    this.collisions = [];
-  }
-
-  /**
-   * Add a single facet cut options instance to the set.  Updating the
-   * accumulated signatures and detecting and reconciling any collisions
-   * @param {FacetCutOpts} co
-   */
-  addFacet(co) {
-    // filter the signatures array from the facet description read from file.
-    // create an update object mapping the new signatures to the cutter opts
-    // instance  we just created for the facet.
-    const toadd = co.signatures
-      .filter((s) => !(s in this.signatures))
-      .map((s) => [s, co]);
-    if (toadd.length != co.selectors.length) {
-      // one or more duplicates
-      const toremove = co.signatures.filter((s) => s in signatures);
-
-      // remove from the new cutter opts
-      co.removeSignatures(...toremove);
-
-      // go back and remove from all previous cutter opts
-      const conflicted = [co];
-      for (const sig of toremove) {
-        this.signatures[sig].removeSignatures(...toremove);
-        conflicted.push(this.signatures[sig]);
-      }
-      this.collisions.push([toremove, conflicted]);
-    }
-    this.cutterOpts.push(co);
-    for (const [sig, co] of toadd) {
-      this.signatures[sig] = [...this.signatures[sig], co]
-    }
   }
 }
 
@@ -152,7 +128,9 @@ export class FacetCutOpts {
    * @returns {["name, commonName | fileName"], [..."  selector signature"]}
    */
   toStructuredLines(fullNames = false) {
-    const parts = [`${this.name} ${fullNames ? this.fileName : this.commonName}`];
+    const parts = [
+      `${this.name} ${fullNames ? this.fileName : this.commonName}`,
+    ];
     for (var i = 0; i < this.selectors.length; i++) {
       parts.push(`  ${this.selectors[i]} ${this.signatures[i]}`);
     }
@@ -161,23 +139,23 @@ export class FacetCutOpts {
 
   /** Return the cut information as rows for table like accumulation.
    *
-   * @param {boolean} fullNames if true put the fileName in the row rather than the commonName.
    * Note that if you join each row into a single line and sort along with the
    * rows from other cuts you will see the clashes due to lexical ordering
    * @returns {["selector", "signature", "name", "commonName" | "fileName"]}
    */
-  *toRows(fullNames = false) {
+  *toRows() {
     for (var i = 0; i < this.selectors.length; i++) {
       yield [
         this.selectors[i],
         this.signatures[i],
         this.name,
-        fullNames ? this.fileName : this.commonName
+        this.commonName,
+        this.fileName,
       ];
     }
   }
-  toLines(fullNames = false) {
-    return [...this.toRows(fullNames)];
+  toLines() {
+    return [...this.toRows()];
   }
   toObject() {
     return {

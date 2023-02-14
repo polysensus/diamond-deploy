@@ -56,7 +56,10 @@ produce output that can be consumed by deploy-new and deploy`
     "facet is the only supported class for now"
   )
   .option("-n, --names <names...>")
-  .option("-F, --format <format>", "'json' | 'info' | 'table'. defaults to 'table'")
+  .option(
+    "-F, --format <format>",
+    "'json' | 'info' | 'table'. defaults to 'table'"
+  )
   .option("-a, --absoloute", "output absoloute filenames")
   .action((options) => listSelectors(program, options));
 
