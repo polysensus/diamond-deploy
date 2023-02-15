@@ -21,10 +21,18 @@ function readExclusions(filename, r) {
 export function listSelectors(program, options) {
   const r = Reporter.fromVerbosity(options.verbose);
 
+  options.directories = options.directories ?? ["."];
+
   const loader = new FoundryFileLoader(options, r);
   loader.addDirectoryFinders(...options.directories);
 
   loader.load();
+  if (!loader.foundInterfaces()) {
+    r.out(
+      `no interfaces found in directorys: ${options.directories.join(", ")}`
+    );
+    process.exit(1);
+  }
 
   const [found, excluded] = loader.selectCuts(readExclusions(options.exclude));
 

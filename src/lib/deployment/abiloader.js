@@ -44,6 +44,10 @@ export class ABILoader {
     }
   }
 
+  foundInterfaces() {
+    return Object.keys(this.interfaces).length;
+  }
+
   get(name, constraint) {
     const variants = this.intefaces[name] ?? [];
     if (variants.length == 0) throw new Error(`ABILoader: not-found ${name}`);

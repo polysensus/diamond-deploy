@@ -7,6 +7,15 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "list defaults",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": ["list"]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Launch Program",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js"

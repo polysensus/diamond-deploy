@@ -17,6 +17,15 @@ export async function deployNewDiamond(program, options) {
 
   const opts = program.opts();
   const deploykey = resolveHardhatKey(opts.deploykey);
+
+  if (!opts.offline) {
+    if (!deploykey && !program.opts().url) {
+      r.out(
+        `unless operating in offline mode a deployment key and url is required`
+      );
+      process.exit(1);
+    }
+  }
   const signer = programConnect(program, false, deploykey);
 
   const cuts = readJson(options.facets ?? "facets.json").map(

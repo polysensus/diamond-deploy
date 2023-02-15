@@ -37,7 +37,9 @@ export class BaseMatcher {
 export class BaseReader {
   /** readJson reads the full contents of the found source and returns the object
    * parses assuming the content is json formated.
-   * The base implemetnation throws, there is no possible neutral implementation
+   * The base implemetnation throws, there is no possible neutral implementation.
+   * Implementation shoud swallow json parse errors and return null in that case.
+   * io errors, basic file permissions issues should be allowed to bubble up
    * @param {*} foundname - assumed to be a source found by this finder
    * @returns {object} the abi as a javsacript list, compatible with ethers.utils.Interface constructor
    */

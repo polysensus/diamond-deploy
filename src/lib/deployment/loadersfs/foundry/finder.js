@@ -17,7 +17,7 @@ export class FoundryFileFinder extends GlobFinder {
    */
   readAbi(foundname) {
     const content = super.readAbi(foundname);
-    if (content.abi.length == 0) {
+    if (!content?.abi?.length) {
       this.reporter.debug(`ignoring emtpy abi in file ${foundname}`);
       return null;
     }

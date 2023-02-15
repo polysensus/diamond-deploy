@@ -6,7 +6,7 @@ import { FoundryFileFinder } from "./finder.js";
 export class FoundryFileLoader extends FoundryLoader {
   constructor(options, reporter) {
     super(options, reporter);
-    this.reader = new FileReader();
+    this.reader = new FileReader(reporter);
     this.matcher = new FileMatcher();
   }
   addDirectoryFinders(...outdirs) {
