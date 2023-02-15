@@ -5,18 +5,17 @@ ERC 2535 deployment package. cli tool and package
 The tool provides commands for discovering and deploying smart contract facets
 written to the ERC 2535 standard.
 
-The `list` command discovers deployable contract artifact discovery from foundry
-build outputs and can produce an 'exclusions' file to reconcile function
-selector colisions accross diamond facet implementations. (artifact just means
-solidity compiler output from a particular tool chain)
+The `list` command finds deployable contract artifacts in foundry build outputs
+and can produce an 'exclusions' file to reconcile function selector collisions
+across diamond facet implementations.
 
-The 'diamond-new' command uses the outputs of list to deploy a new diamond instance.
+The `diamond-new` command uses the outputs of list to deploy a new diamond instance.
 
-Examples
+Example workflow follows
 
 ## Run a list to find the artifacts
 
-This example lists the contracts whose names end with `Facet` and additionaly
+This example lists the contracts whose names end with `Facet` and additionally
 find the `Diamond` and `DiamondNew` artifacts. By default the output is human
 readable and relatively concise
 
@@ -51,7 +50,7 @@ readable and relatively concise
     0x01ffc9a7 supportsInterface(bytes4) DiamondLoupeFacet DiamondLoupeFacet.sol/DiamondLoupeFacet.json
     0x01ffc9a7 supportsInterface(bytes4) ERC1155ArenaFacet ERC1155ArenaFacet.sol/ERC1155ArenaFacet.json
 
-## Run a list to find the the coliding selectors and make an exclusion file
+## Run a list to find the the colliding selectors and make an exclusion file
 
 To get a list of just the exclusions and to format the output in json do
 
@@ -74,9 +73,11 @@ To get a list of just the exclusions and to format the output in json do
       }
     ]
 
-Store the out put from the previous command in a .json file and delete the entry you don't want. Assuming you called the file `exclude.json` do
+Store the out put from the previous command in a .json file and delete the entry you don't want.
 
 ## Run list with the exclusions reconciling the selectors to discard
+
+Assuming you called the file `exclude.json` do
 
     >> node deploycli.js list -i ./contracts/build/forge/out -I facet -n Diamond DiamondNew --exclusions exclude.json
 
@@ -87,10 +88,10 @@ No collisions will be reported.
 Now do (assuming hard hat server running on http://localhost:8545)
 
     >> node deploycli.js list -i ./contracts/build/forge/out -I facet -n Diamond DiamondNew --exclusions exclude.json --format json | tee facets.json
-    ... json formated list of things to deploy
+    ... json formatted list of things to deploy
 
 
-    >> node deploycli.js diamond-new -u http://localhost:8545 --deploykey hardat --facets facets.json
+    >> node deploycli.js diamond-new -u http://localhost:8545 --deploykey hardhat --facets facets.json
     deployed facet ArenaCallsFacet@0xeF31027350Be2c7439C1b0BE022d49421488b72C
     deployed facet ArenaFacet@0x12Bcb546bC60fF39F1Adfc7cE4605d5Bd6a6A876
     deployed facet ArenaTranscriptsFacet@0xaC47e91215fb80462139756f43438402998E4A3a
@@ -102,8 +103,12 @@ Now do (assuming hard hat server running on http://localhost:8545)
     deployed facet Diamond@0x54B8d8E2455946f2A5B8982283f2359812e815ce
     Diamond upgrade success: 0x6a9c48d24b831e8b1e694c8143e0d6a827bbd57d4c38420d91622b8b0a96fd85
 
+
 For deployment the init parameters for the nominated DiamondInit contract can be
 supplied on the command line. See `--diamond-init-args` and related options.
+
+The tool has a copy of the well known hard hat keys for convenience. You can
+also provide your own via ENV or option.
 
 # things under consideration
 
@@ -115,6 +120,6 @@ supplied on the command line. See `--diamond-init-args` and related options.
 - conditional upgrade support based on runtime code hash
 - create2 based deployment
 
-The list command can be used to detect function selector colisions accross
+The list command can be used to detect function selector collisions across
 diamond facet implementations. And solidity compiler outputs from foundry and
 reconcile function selectors where two diamond facet implementations
