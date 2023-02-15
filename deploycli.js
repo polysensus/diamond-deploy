@@ -27,12 +27,15 @@ program
   )
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
+  .option("-v, --verbose [count]", "more verbose reporting")
   .option("-O, --offline", "prepare unsigned transaction payloads")
   .option("--diamond-name", "name of diamond contract", "Diamond")
   .option("--diamond-init-name", "name of diamond contract", "DiamondNew")
   .option(
     "--diamond-init-args",
     "json formated args for the init contract name",
+    // TODO: this default is chaintrap specific, will be just undefined and
+    // default to no init args
     '[{"typeURIs":[]}]'
   )
   .option("--diamond-cut-name", "name of diamond contract", "DiamondCutFacet")
@@ -61,6 +64,11 @@ produce output that can be consumed by deploy-new and deploy`
     "'json' | 'info' | 'table'. defaults to 'table'"
   )
   .option("-a, --absoloute", "output absoloute filenames")
+  .option("-c, --collisions-only", "only output collisions (if there are any)")
+  .option(
+    "-x, --exclude <exclude>",
+    "a file listing excluded selector implementations. use to reconcile or remove collisions. The format is the same as produced whenwhen -F json and --collisions-only are set"
+  )
   .action((options) => listSelectors(program, options));
 
 program.parse();

@@ -1,11 +1,22 @@
-import { Selectors } from "../lib/deployment/diamond/selectors.js";
+import { readJson } from "./fsutil.js";
 
 import { FoundryFileLoader } from "../lib/deployment/loadersfs/foundry/loader.js";
 import { Reporter } from "../lib/reporter.js";
-import {
-  FacetSelectorSet,
-  FacetCutOpts,
-} from "../lib/deployment/diamond/facet.js";
+import { stringifyRows } from "../lib/deployment/diamond/facet.js";
+
+function readExclusions(filename, r) {
+  if (!filename) return {};
+  const exclusions = {};
+  for (const exc of readJson(filename)) {
+    const key = `${exc.selector}:${exc.commonName}`;
+    if (key in exclusions) {
+      if (r) r.out(`ambiguous entries in exclusions file: ${key}`);
+      continue;
+    }
+    exclusions[key] = exc;
+  }
+  return exclusions;
+}
 
 export function listSelectors(program, options) {
   const r = Reporter.fromVerbosity(options.verbose);
@@ -15,64 +26,47 @@ export function listSelectors(program, options) {
 
   loader.load();
 
-  const found = new FacetSelectorSet();
-
-  for (const [name, iface, fileName, finder] of loader.list()) {
-    const co = new FacetCutOpts({
-      name,
-      fileName,
-      commonName: finder.commonName(fileName),
-      finderName: finder.constructor.name,
-      readerName: finder.reader.constructor.name,
-      selectors: [],
-      signatures: [],
-    });
-
-    for (const sel of new Selectors(iface).all()) {
-      const f = iface.getFunction(sel);
-      co.selectors.push(sel);
-      co.signatures.push(f.format());
-    }
-    found.addFacet(co);
-  }
+  const [found, excluded] = loader.selectCuts(readExclusions(options.exclude));
 
   const collisions = [...found.resolve()];
 
   var rowOut = function (rows) {
     r.out(
-      rows
-        .map((row) =>
-          [
-            ...row.slice(0, row.length - 2),
-            row[options.absoloute ? row.length - 1 : row.length - 2],
-          ].join(" ")
-        )
-        .join("\n")
+      stringifyRows(rows, {
+        format: options.format,
+        absoloute: options.absoloute,
+        replacer: null,
+        space: 2,
+      })
     );
   };
 
-  if (options.format == "json") {
-    r.out(found.toJson());
-    return;
-  }
-
-  if (options.format == "info") {
-    for (const co of found.toStructuredLines(options.absoloute)) {
-      r.out(co.join("\n"));
+  if (!options.collisionsOnly) {
+    if (options.format == "json") {
+      r.out(found.toJson());
     }
 
-    return;
-  }
+    if (options.format == "info") {
+      for (const co of found.toStructuredLines(options.absoloute)) {
+        r.out(co.join("\n"));
+      }
 
-  if (options.format !== "json" && options.format !== "info") {
-    for (const rows of found.toLines(options.absoloute)) {
-      if (!rows.length) continue;
-      rowOut(rows);
+      return;
     }
+
+    if (options.format !== "json" && options.format !== "info") {
+      for (const rows of found.toLines(options.absoloute)) {
+        if (!rows.length) continue;
+        rowOut(rows);
+      }
+    }
+  }
+  for (const [co, sel, sig] of excluded) {
+    r.debug(`excluded: ${sel} ${sig} ${co.name} ${co.commonName}`);
   }
 
   if (collisions.length != 0) {
-    r.out("*** collisions ***");
+    !options.collisionsOnly && r.out("*** collisions ***");
     for (const rows of collisions) {
       rowOut(rows);
     }

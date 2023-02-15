@@ -143,6 +143,7 @@ export class FacetCutOpts {
    */
   *toRows() {
     for (var i = 0; i < this.selectors.length; i++) {
+      // If this changes *update* facetRowObject!!!
       yield [
         this.selectors[i],
         this.signatures[i],
@@ -166,4 +167,33 @@ export class FacetCutOpts {
       signatures: this.signatures,
     };
   }
+}
+
+export function facetRowObject(row) {
+  return {
+    selector: row.length > 0 ? row[0] : undefined,
+    signature: row.length > 1 ? row[1] : undefined,
+    name: row.length > 2 ? row[2] : undefined,
+    commonName: row.length > 3 ? row[3] : undefined,
+    fileName: row.length > 4 ? row[4] : undefined,
+  };
+}
+
+export function stringifyRows(rows, { format, absoloute, replacer, space }) {
+  if (format === "json") {
+    return JSON.stringify(
+      rows.map((row) => facetRowObject(row)),
+      replacer,
+      space
+    );
+  }
+
+  return rows
+    .map((row) =>
+      [
+        ...row.slice(0, row.length - 2),
+        row[absoloute ? row.length - 1 : row.length - 2],
+      ].join(" ")
+    )
+    .join("\n");
 }

@@ -37,11 +37,10 @@
         "-I",
         "facet",
         "-n",
-        "Diamond"
+        "Diamond",
+        "DiamondNew"
       ]
-    }
-  ]
-
+    },
     {
       "type": "node",
       "request": "launch",

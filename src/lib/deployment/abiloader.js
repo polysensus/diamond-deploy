@@ -1,6 +1,10 @@
 import path from "path";
 import { ethers } from "ethers";
 
+import { Selectors } from "./diamond/selectors.js";
+
+import { FacetSelectorSet, FacetCutOpts } from "./diamond/facet.js";
+
 export function contractNameFromABIFileName(filename) {
   var name = path.basename(filename);
   if (name.endsWith(".json")) {
@@ -68,6 +72,36 @@ export class ABILoader {
     for (const name of Object.keys(this.interfaces)) {
       for (const variant of this.interfaces[name]) yield [name, ...variant];
     }
+  }
+
+  selectCuts(exclusions) {
+    const found = new FacetSelectorSet();
+    const excluded = [];
+    for (const [name, iface, fileName, finder] of this.list()) {
+      const co = new FacetCutOpts({
+        name,
+        fileName,
+        commonName: finder.commonName(fileName),
+        finderName: finder.constructor.name,
+        readerName: finder.reader.constructor.name,
+        selectors: [],
+        signatures: [],
+      });
+
+      for (const sel of new Selectors(iface).all()) {
+        const sig = iface.getFunction(sel).format();
+
+        if (`${sel}:${co.commonName}` in exclusions) {
+          excluded.push([co, sel, sig]);
+          continue;
+        }
+
+        co.selectors.push(sel);
+        co.signatures.push(sig);
+      }
+      found.addFacet(co);
+    }
+    return [found, excluded];
   }
 
   addInterface(iface, filename, finder) {

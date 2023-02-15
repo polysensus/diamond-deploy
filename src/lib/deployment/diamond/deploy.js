@@ -150,7 +150,7 @@ export class DiamondDeployer {
   report() {
     this.r.out(
       JSON.stringify(
-        deployer.results.map((r) => r.data),
+        this.results.map((r) => r.data),
         null,
         2
       )

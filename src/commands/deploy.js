@@ -47,7 +47,7 @@ export async function deployNewDiamond(program, options) {
   const exitok = (msg) => exit(msg, undefined);
 
   await deployer.processCuts(cuts);
-  var result;
+  var result = { msg: "not deployed" };
   if (deployer.canDeploy()) {
     result = await deployer.deploy();
     if (result.isErr()) exit(result.errmsg(), 1);

@@ -1,2 +1,4 @@
+facets.json
+exclude.json
 dist
 node_modules
