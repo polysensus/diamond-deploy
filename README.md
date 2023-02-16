@@ -89,9 +89,8 @@ Now do (assuming hard hat server running on http://localhost:8545)
 
     >> node deploycli.js list -i ./contracts/build/forge/out -I facet -n Diamond DiamondNew --exclusions exclude.json --format json | tee facets.json
     ... json formatted list of things to deploy
-
-
     >> node deploycli.js diamond-new -u http://localhost:8545 --deploykey hardhat --facets facets.json
+
     deployed facet ArenaCallsFacet@0xeF31027350Be2c7439C1b0BE022d49421488b72C
     deployed facet ArenaFacet@0x12Bcb546bC60fF39F1Adfc7cE4605d5Bd6a6A876
     deployed facet ArenaTranscriptsFacet@0xaC47e91215fb80462139756f43438402998E4A3a
