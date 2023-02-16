@@ -11,12 +11,12 @@ program.addOption(
   new Option(
     "-d, --deploykey <key>",
     "derive the areana address from private key that deployed the arena contract"
-  ).env("ARENASTATE_DEPLOYKEY")
+  ).env("DEPLOYKEY")
 );
 
 program.addOption(
   new Option("-u, --url <url>", "provider url", "http://localhost:8300").env(
-    "ARENASTATE_PROVIDER_URL"
+    "PROVIDER_URL"
   )
 );
 
@@ -33,7 +33,7 @@ program
   .option("--diamond-init-name", "name of diamond contract", "DiamondNew")
   .option(
     "--diamond-init-args",
-    "json formated args for the init contract name",
+    "json formatted args for the init contract name",
     // TODO: this default is chaintrap specific, will be just undefined and
     // default to no init args
     '[{"typeURIs":[]}]'

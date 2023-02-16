@@ -7,6 +7,9 @@
   "module": "dist/diamond-deploy.esm.js",
   "browser": "dist/diamond-deploy.umd.js",
   "deploycli": "dist/deploycli.esm.js",
+  "bin": {
+    "diamond-deploy": "./deploycli.js"
+  },
   "files": [
     "dist"
   ],
