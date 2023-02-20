@@ -73,7 +73,7 @@ To get a list of just the exclusions and to format the output in json do
       }
     ]
 
-Store the out put from the previous command in a .json file and delete the entry you don't want.
+Store the out put from the previous command in a .json file and delete the entry you want to keep. The resulting file is a list of the selectors to *exclude* which can be passed to the deployment commands. And also the the list commands so that they can reconcile colisions.
 
 ## Run list with the exclusions reconciling the selectors to discard
 

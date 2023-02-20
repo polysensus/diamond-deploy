@@ -8,7 +8,7 @@ function readExclusions(filename, r) {
   if (!filename) return {};
   const exclusions = {};
   for (const exc of readJson(filename)) {
-    const key = `${exc.selector}:${exc.commonName}`;
+    const key = `${exc.selector}:${exc.name}`;
     if (key in exclusions) {
       if (r) r.out(`ambiguous entries in exclusions file: ${key}`);
       continue;

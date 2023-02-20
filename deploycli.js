@@ -29,16 +29,17 @@ program
   .combineFlagAndOptionalValue(false)
   .option("-v, --verbose [count]", "more verbose reporting")
   .option("-O, --offline", "prepare unsigned transaction payloads")
-  .option("--diamond-name", "name of diamond contract", "Diamond")
-  .option("--diamond-init-name", "name of diamond contract", "DiamondNew")
+  .option("--diamond-owner-key <name>", "the owner account key")
+  .option("--diamond-name <name>", "name of diamond contract", "Diamond")
+  .option("--diamond-init-name <name>", "name of diamond contract", "DiamondNew")
   .option(
-    "--diamond-init-args",
+    "--diamond-init-args <args>",
     "json formatted args for the init contract name",
     // TODO: this default is chaintrap specific, will be just undefined and
     // default to no init args
     '[{"typeURIs":[]}]'
   )
-  .option("--diamond-cut-name", "name of diamond contract", "DiamondCutFacet")
+  .option("--diamond-cut-name <name>", "name of diamond contract", "DiamondCutFacet")
   .option(
     "-f, --facets <facets>",
     "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"

@@ -88,17 +88,23 @@ export class DiamondDeployer {
 
     var co = this.diamond;
 
+    const ownerSigner = this.options.diamondOwner ?? this.signer;
+    const ownerAddress = await ownerSigner.getAddress();
+
     this.diamond.address = await this.tryDeploy(
+      // We always *deploy* the diamond with the deployment key
+      this.signer,
       co.iface,
       co.bytecode,
       co,
-      await this.signer.getAddress(),
+      // If the owner key is provided, it becomes the owner account, diamondCut must be executed with this account.
+      ownerAddress,
       this.diamondCut.address
     );
     if (isError(this.diamond.address))
       return DeployResult.fromErr(
         this.diamond.address,
-        `failed to deploy diamond ${co.name} ${address}`
+        `failed to deploy diamond ${co.name} ${ownerAddress}`
       );
 
     if (!this.diamondCut?.address)
@@ -117,7 +123,7 @@ export class DiamondDeployer {
     const cutter = new ethers.Contract(
       this.diamond.address,
       this.diamondCut.iface,
-      this.signer
+      ownerSigner
     );
     const tx = await cutter.diamondCut(
       this.facetCuts,
@@ -135,7 +141,7 @@ export class DiamondDeployer {
     return DeployResult.fromSuccess(
       tx,
       receipt,
-      `Diamond upgrade success: ${tx.hash}`
+      `Diamond@${this.diamond.address}, upgrade ok: tx=${tx.hash}`
     );
   }
 
@@ -167,10 +173,11 @@ export class DiamondDeployer {
    * @param {*} cuts
    */
   async processCuts(cuts) {
+    this.r.out(`${this.options.diamondName} ${this.options.diamondInitName} ${this.options.diamondCutName}`)
     for (const co of cuts) {
       const reader = this.readers[co.readerName];
       if (!reader) {
-        r.out(`reader ${co.readerName} not supported, skipping ${co.fileName}`);
+        this.r.out(`reader ${co.readerName} not supported, skipping ${co.fileName}`);
         continue;
       }
 
@@ -189,7 +196,8 @@ export class DiamondDeployer {
       // never delegated
       co.removeSignatures("init(bytes)");
 
-      address = await this.tryDeploy(iface, bytecode, co);
+      // cut contracts are always deployed by the deployer key
+      address = await this.tryDeploy(this.signer, iface, bytecode, co);
       if (isError(address)) continue;
       co.address = address;
       co.iface = iface;
@@ -229,13 +237,13 @@ export class DiamondDeployer {
    * @param  {...any} args
    * @returns {string|import('ethers').UnsignedTransaction|erorr} address, unsigned transaction or an error
    */
-  async tryDeploy(iface, bytecode, co, ...args) {
+  async tryDeploy(signer, iface, bytecode, co, ...args) {
     try {
       // facets are not allowed constructor arguments
       const [address, tx, msg] = await deployContract(
         iface,
         bytecode,
-        this.signer,
+        signer,
         co,
         ...args
       );

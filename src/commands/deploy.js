@@ -1,4 +1,4 @@
-import { programConnect } from "./connect.js";
+import { programConnect, resolveSigner } from "./connect.js";
 import { resolveHardhatKey } from "./hhkeys.js";
 import { readJson } from "./fsutil.js";
 
@@ -27,6 +27,10 @@ export async function deployNewDiamond(program, options) {
     }
   }
   const signer = programConnect(program, false, deploykey);
+
+  if (options.diamondOwnerKey) {
+    options.diamondOwner = await resolveSigner(options.diamondOwnerKey, signer.provider, signer);
+  }
 
   const cuts = readJson(options.facets ?? "facets.json").map(
     (o) => new FacetCutOpts(o)

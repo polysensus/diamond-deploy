@@ -22,3 +22,18 @@ export function programConnect(program, polling = false, key = null) {
   }
   return signer ? signer : provider;
 }
+
+export function resolveSigner(candidateKey, provider, defaultSigner) {
+  if (!candidateKey) {
+    return defaultSigner;
+  }
+
+  let signer = candidateKey
+  if (isFile(candidateKey)) {
+    signer = readHexKey(signer);
+  }
+  signer = resolveHardhatKey(signer);
+  if (!signer) return defaultSigner;
+
+  return new ethers.Wallet(signer, provider);
+}

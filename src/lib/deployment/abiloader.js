@@ -95,7 +95,7 @@ export class ABILoader {
       for (const sel of new Selectors(iface).all()) {
         const sig = iface.getFunction(sel).format();
 
-        if (`${sel}:${co.commonName}` in exclusions) {
+        if (`${sel}:${co.name}` in exclusions) {
           excluded.push([co, sel, sig]);
           continue;
         }
