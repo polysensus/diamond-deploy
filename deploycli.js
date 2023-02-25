@@ -4,8 +4,9 @@ dotenv.config();
 
 import { program, Option } from "commander";
 
-import { deployNewDiamond } from "./src/commands/deploy.js";
+import { deployNewDiamond, deployDiamondUpgrade } from "./src/commands/deploy.js";
 import { listSelectors } from "./src/commands/list.js";
+import { pendingTransactions } from "./src/commands/pending.js";
 
 program.addOption(
   new Option(
@@ -21,6 +22,41 @@ program.addOption(
 );
 
 program
+  .command("diamond-up")
+  .description(
+    `update an existing deploy a new diamond, this deploys a new proxy contract with empty state and cuts in the facets`
+  )
+  .enablePositionalOptions()
+  .combineFlagAndOptionalValue(false)
+  .option('-N, --dry-run')
+  .option("-v, --verbose [count]", "more verbose reporting")
+  .option("--replace", "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)")
+  .option("--offline", "prepare unsigned transaction payloads")
+  .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
+  .option("--legacy", "pre eip 1559 gas estimation")
+  .option("--gasprice <number>", "gas price in gwei for deployment.")
+  .option("--diamond-address <address>", "the address of the diamond to upgrade. derived from deployer key if not provided")
+  .option("--diamond-prune", "if set, remove any selectors that are not present in --facets")
+  .option("--diamond-owner-key <name>", "the owner account key")
+  .option("--diamond-name <name>", "name of diamond contract", "Diamond")
+  .option("--diamond-loupe-name <name>", "name of diamond loupe facet contract", "DiamondLoupeFacet")
+  .option("--diamond-init-name <name>", "name of diamond init contract", "DiamondNew")
+  .option("-N, --ignore-names <names...>")
+  .option(
+    "--diamond-init-args <args>",
+    "json formatted args for the init contract name",
+    // TODO: this default is chaintrap specific, will be just undefined and
+    // default to no init args
+    '[{"typeURIs":[]}]'
+  )
+  .option("--diamond-cut-name <name>", "name of diamond contract", "DiamondCutFacet")
+  .option(
+    "-f, --facets <facets>",
+    "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
+  )
+  .action((options) => deployDiamondUpgrade(program, options));
+
+program
   .command("diamond-new")
   .description(
     `deploy a new diamond, this deploys a new proxy contract with empty state and cuts in the facets`
@@ -28,7 +64,11 @@ program
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
   .option("-v, --verbose [count]", "more verbose reporting")
-  .option("-O, --offline", "prepare unsigned transaction payloads")
+  .option("--replace", "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)")
+  .option("--offline", "prepare unsigned transaction payloads")
+  .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
+  .option("--legacy", "pre eip 1559 gas estimation")
+  .option("--gasprice <number>", "gas price in gwei for deployment.")
   .option("--diamond-owner-key <name>", "the owner account key")
   .option("--diamond-name <name>", "name of diamond contract", "Diamond")
   .option("--diamond-init-name <name>", "name of diamond contract", "DiamondNew")
@@ -45,6 +85,14 @@ program
     "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
   )
   .action((options) => deployNewDiamond(program, options));
+
+program
+  .command("pending")
+  .option("-a --account <address>", "the owner account address")
+  .option("-k --key <key>", "the owner account key (prioritised over address)")
+  .action((options) => {
+    pendingTransactions(program, options)
+  });
 
 program
   .command("list")

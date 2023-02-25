@@ -7,6 +7,78 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "pending transaction count",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-u",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "pending"
+      ]
+
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "** chaintrap polygon upgrade",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-u",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "diamond-up",
+        "--ignore-names", "DiamondNew",
+        "--diamond-address", "0xBCAEF1Bd82E444B68d9C47E14f22d623150CeFB5",
+        "--diamond-prune",
+        "--dry-run",
+        "--replace",
+        "--gaslimit", "3500000",
+        // "--gasprice", "30",
+        "--gasprice", "2.6",
+        "--legacy",
+        "--diamond-owner-key",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/arena-owner.key",
+        "-f", "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+      ]
+
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "** chaintrap polygon deploy",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-u",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "diamond-new",
+        "--replace",
+        // "--gaslimit", "5000000",
+        // "--gasprice", "30",
+        "--gaslimit", "3000000",
+        // "--gasprice", "200",
+        "--legacy",
+        "--diamond-owner-key",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/arena-owner.key",
+        "--diamond-cut-name", "DiamondCutFacet",
+        "--diamond-init-name", "DiamondNew",
+        "--diamond-init-args",
+          "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
+        "-f", "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+      ]
+
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "list defaults",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
