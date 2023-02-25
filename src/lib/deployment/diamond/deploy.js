@@ -262,7 +262,7 @@ export class DiamondDeployer {
       this.diamond &&
       this.diamondCut &&
       this.diamondCut.iface &&
-      (this.diamondCut.address || this.diamond.address) &&
+      (this.diamondCut.c.address || this.diamond.c.address) &&
       this.signer &&
       this.errors.length === 0
     );
@@ -314,6 +314,10 @@ export class DiamondDeployer {
         );
       }
     }
+    if (this.facetCuts.length === 0)
+      return new DeployResult({
+        status:0, msg: `diamond @${this.diamond.c.address} nothing to do or all up to date`
+      });
 
     const tx = await this.diamondCut.c.diamondCut(
       this.facetCuts,

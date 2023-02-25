@@ -36,6 +36,7 @@ program
   .option("--legacy", "pre eip 1559 gas estimation")
   .option("--gasprice <number>", "gas price in gwei for deployment.")
   .option("--diamond-address <address>", "the address of the diamond to upgrade. derived from deployer key if not provided")
+  .option("--diamond-nonce <nonce>", "check addresses derived from nonces on or before this (by default all are checked if --diamond-address is not set")
   .option("--diamond-prune", "if set, remove any selectors that are not present in --facets")
   .option("--diamond-owner-key <name>", "the owner account key")
   .option("--diamond-name <name>", "name of diamond contract", "Diamond")
