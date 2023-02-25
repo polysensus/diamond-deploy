@@ -60,7 +60,7 @@ export class DiamondDeployer {
     this.options.diamondInitName = options.diamondInitName ?? "DiamondInit";
 
     this.ignoreNames = {}
-    for (const name of options?.ignoreNames) {
+    for (const name of options?.ignoreNames ?? []) {
       if (name == this.options.diamondName) {
         this.r.out(`can't ignore the diamond contract, we deal with it explicitly`);
         continue
@@ -206,13 +206,12 @@ export class DiamondDeployer {
 
       // cut contracts are always deployed by the deployer key
       if (!this.options.dryRun) {
-        const address = await this.tryDeploy(this.signer, iface, co.bytecode, co);
+        const address = await this.tryDeploy(this.signer, co.iface, co.bytecode, co);
         if (isError(address)) continue;
         co.address = address;
       } else {
         this.r.out(`${dryRunModeMsg}skip deploy ${co.name}`)
       }
-      co.iface = iface;
 
       if (co.name == this.options.diamondInitName) {
         if (!this.diamondInit) this.diamondInit = co;
@@ -262,7 +261,7 @@ export class DiamondDeployer {
       this.diamond &&
       this.diamondCut &&
       this.diamondCut.iface &&
-      (this.diamondCut.c.address || this.diamond.c.address) &&
+      ((this.diamondCut.c?.address ?? this.diamondCut.address) || (this.diamond.c?.address ?? this.diamond.address)) &&
       this.signer &&
       this.errors.length === 0
     );
@@ -335,7 +334,7 @@ export class DiamondDeployer {
     return DeployResult.fromSuccess(
       tx,
       receipt,
-      `Diamond@${this.diamond.c.address}, upgrade ok: tx=${tx.hash}`
+      `Diamond@${this.diamond.c?.address ?? this.diamond.address}, upgrade ok: tx=${tx.hash}`
     );
   }
 

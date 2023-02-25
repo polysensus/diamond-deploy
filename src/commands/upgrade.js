@@ -1,6 +1,10 @@
+// This command implements upgrade only deployment, where the proxy contract is
+// already deployed.
+import { ethers } from "ethers";
 import { programConnect, resolveSigner } from "./connect.js";
 import { resolveHardhatKey } from "./hhkeys.js";
 import { readJson } from "./fsutil.js";
+import { deriveContractAddress } from "../lib/deployment/deriveaddress.js";
 
 import { DiamondDeployer } from "../lib/deployment/diamond/deploy.js";
 
@@ -12,7 +16,7 @@ const readers = {
   FileReader: new FileReader(),
 };
 
-export async function deployNewDiamond(program, options) {
+export async function deployDiamondUpgrade(program, options) {
   const r = Reporter.fromVerbosity(options.verbose);
 
   const opts = program.opts();
@@ -27,6 +31,19 @@ export async function deployNewDiamond(program, options) {
     }
   }
   const signer = programConnect(program, false, deploykey);
+
+  let diamond;
+  if (options.diamondAddress) 
+    diamond = ethers.utils.getAddress(options.diamondAddress);
+  else
+    diamond = await deriveContractAddress(r, signer, signer.address, options.diamondNonce)
+
+  if (!diamond) {
+    r.out(`diamond address not provided and not infered from deploy key`)
+    process.exit(1)
+  }
+
+  options.diamondAddress = diamond;
 
   if (options.diamondOwnerKey) {
     options.diamondOwner = await resolveSigner(options.diamondOwnerKey, signer.provider, signer);
@@ -59,8 +76,10 @@ export async function deployNewDiamond(program, options) {
   // exitok will exit with non zero status if there are recorded errors
   const exitok = (msg) => exit(msg, undefined);
 
-  // To force a new deploy, we just don't look for the old one.
-  await deployer.processERC2535Cuts(cuts);
+  // Handle the diamond, diamondCut and diamondLouper up front. This will throw
+  // if we cant load the abi for each. If the diamondAddress is provided (or
+  // derived) contract instances are bound for each.
+  await deployer.processERC2535Cuts(cuts, options.diamondAddress);
   await deployer.processCuts(cuts);
   var result = { msg: "not deployed" };
   if (deployer.canDeploy()) {

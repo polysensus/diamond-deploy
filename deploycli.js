@@ -4,7 +4,9 @@ dotenv.config();
 
 import { program, Option } from "commander";
 
-import { deployNewDiamond, deployDiamondUpgrade } from "./src/commands/deploy.js";
+import { deployNewDiamond } from "./src/commands/deploy.js";
+import { deployDiamondUpgrade } from "./src/commands/upgrade.js";
+import { diamondFromAccountNonce } from "./src/commands/diamondfromaccount.js";
 import { listSelectors } from "./src/commands/list.js";
 import { pendingTransactions } from "./src/commands/pending.js";
 
@@ -16,10 +18,23 @@ program.addOption(
 );
 
 program.addOption(
-  new Option("-u, --url <url>", "provider url", "http://localhost:8300").env(
+  new Option("-u, --url <url>", "provider url", "http://localhost:8545").env(
     "PROVIDER_URL"
   )
 );
+
+program
+  .command("find")
+  .description(
+    `attempt to find a diamon implementing contract for an EOA. Search from the last nonce back by default or the specified one otherwise.`
+  )
+  .enablePositionalOptions()
+  .combineFlagAndOptionalValue(false)
+  .option("-v, --verbose [count]", "more verbose reporting")
+  .option("-n, --diamond-nonce <nonce>", "check addresses derived from nonces on or before this (by default all are checked if --diamond-address is not set")
+  .action((options) => diamondFromAccountNonce(program, options));
+
+
 
 program
   .command("diamond-up")
@@ -28,21 +43,20 @@ program
   )
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
-  .option('-N, --dry-run')
+  .option('-n, --dry-run')
   .option("-v, --verbose [count]", "more verbose reporting")
-  .option("--replace", "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)")
+  .option("--ignore-names <names...>")
   .option("--offline", "prepare unsigned transaction payloads")
   .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
   .option("--legacy", "pre eip 1559 gas estimation")
   .option("--gasprice <number>", "gas price in gwei for deployment.")
+  .option("--replace", "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)")
   .option("--diamond-address <address>", "the address of the diamond to upgrade. derived from deployer key if not provided")
   .option("--diamond-nonce <nonce>", "check addresses derived from nonces on or before this (by default all are checked if --diamond-address is not set")
-  .option("--diamond-prune", "if set, remove any selectors that are not present in --facets")
   .option("--diamond-owner-key <name>", "the owner account key")
   .option("--diamond-name <name>", "name of diamond contract", "Diamond")
   .option("--diamond-loupe-name <name>", "name of diamond loupe facet contract", "DiamondLoupeFacet")
   .option("--diamond-init-name <name>", "name of diamond init contract", "DiamondNew")
-  .option("-N, --ignore-names <names...>")
   .option(
     "--diamond-init-args <args>",
     "json formatted args for the init contract name",
@@ -65,13 +79,16 @@ program
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
   .option("-v, --verbose [count]", "more verbose reporting")
-  .option("--replace", "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)")
+  .option('-n, --dry-run')
+  .option("--ignore-names <names...>")
   .option("--offline", "prepare unsigned transaction payloads")
   .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
   .option("--legacy", "pre eip 1559 gas estimation")
   .option("--gasprice <number>", "gas price in gwei for deployment.")
+  .option("--replace", "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)")
   .option("--diamond-owner-key <name>", "the owner account key")
   .option("--diamond-name <name>", "name of diamond contract", "Diamond")
+  .option("--diamond-loupe-name <name>", "name of diamond loupe facet contract", "DiamondLoupeFacet")
   .option("--diamond-init-name <name>", "name of diamond contract", "DiamondNew")
   .option(
     "--diamond-init-args <args>",

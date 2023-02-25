@@ -19,7 +19,21 @@
       ]
 
     },
-
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "** diamond find",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-u",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "find",
+        "--diamond-nonce", "85"
+      ]
+    },
     {
       "type": "node",
       "request": "launch",
@@ -48,6 +62,29 @@
       ]
 
     },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "** chaintrap hh deploy",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-d",
+        "hardhat:10",
+        "diamond-new",
+        "--replace",
+        "--gaslimit", "3000000",
+        "--legacy",
+        "--diamond-owner-key", "hardhat:11",
+        "--diamond-cut-name", "DiamondCutFacet",
+        "--diamond-init-name", "DiamondNew",
+        "--diamond-init-args",
+          "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
+        "-f", "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+      ]
+    },
+ 
 
     {
       "type": "node",
@@ -86,26 +123,6 @@
       "args": ["list"]
     },
 
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Program",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/deploycli.js"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "diamond-new",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/deploycli.js",
-      "envFile": "${workspaceFolder}/.env.hh",
-      "args": [
-        "-u",
-        "http://localhost:8545",
-        "diamond-new" // , "--offline"
-      ]
-    },
     {
       "type": "node",
       "request": "launch",
