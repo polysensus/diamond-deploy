@@ -73,7 +73,7 @@ To get a list of just the exclusions and to format the output in json do
       }
     ]
 
-Store the out put from the previous command in a .json file and delete the entry you want to keep. The resulting file is a list of the selectors to *exclude* which can be passed to the deployment commands. And also the the list commands so that they can reconcile colisions.
+Store the out put from the previous command in a .json file and delete the entry you want to keep. The resulting file is a list of the selectors to _exclude_ which can be passed to the deployment commands. And also the the list commands so that they can reconcile colisions.
 
 ## Run list with the exclusions reconciling the selectors to discard
 
@@ -101,7 +101,6 @@ Now do (assuming hard hat server running on http://localhost:8545)
     deployed facet OwnershipFacet@0x38A70c040CA5F5439ad52d0e821063b0EC0B52b6
     deployed facet Diamond@0x54B8d8E2455946f2A5B8982283f2359812e815ce
     Diamond upgrade success: 0x6a9c48d24b831e8b1e694c8143e0d6a827bbd57d4c38420d91622b8b0a96fd85
-
 
 For deployment the init parameters for the nominated DiamondInit contract can be
 supplied on the command line. See `--diamond-init-args` and related options.

@@ -17,7 +17,6 @@
         "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "pending"
       ]
-
     },
     {
       "type": "node",
@@ -31,7 +30,8 @@
         "-d",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "find",
-        "--diamond-nonce", "85"
+        "--diamond-nonce",
+        "85"
       ]
     },
     {
@@ -46,21 +46,25 @@
         "-d",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "diamond-up",
-        "--ignore-names", "DiamondNew",
+        "--ignore-names",
+        "DiamondNew",
         // "--diamond-address", "0xBCAEF1Bd82E444B68d9C47E14f22d623150CeFB5",
-        "--diamond-nonce", "85",
+        "--diamond-nonce",
+        "85",
         "--diamond-prune",
         // "--dry-run",
         "--replace",
-        "--gaslimit", "3500000",
+        "--gaslimit",
+        "3500000",
         // "--gasprice", "30",
-        "--gasprice", "2.6",
+        "--gasprice",
+        "2.6",
         "--legacy",
         "--diamond-owner-key",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/arena-owner.key",
-        "-f", "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
       ]
-
     },
 
     {
@@ -74,17 +78,21 @@
         "hardhat:10",
         "diamond-new",
         "--replace",
-        "--gaslimit", "3000000",
+        "--gaslimit",
+        "3000000",
         "--legacy",
-        "--diamond-owner-key", "hardhat:11",
-        "--diamond-cut-name", "DiamondCutFacet",
-        "--diamond-init-name", "DiamondNew",
+        "--diamond-owner-key",
+        "hardhat:11",
+        "--diamond-cut-name",
+        "DiamondCutFacet",
+        "--diamond-init-name",
+        "DiamondNew",
         "--diamond-init-args",
-          "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
-        "-f", "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+        "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
       ]
     },
- 
 
     {
       "type": "node",
@@ -101,18 +109,21 @@
         "--replace",
         // "--gaslimit", "5000000",
         // "--gasprice", "30",
-        "--gaslimit", "3000000",
+        "--gaslimit",
+        "3000000",
         // "--gasprice", "200",
         "--legacy",
         "--diamond-owner-key",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/arena-owner.key",
-        "--diamond-cut-name", "DiamondCutFacet",
-        "--diamond-init-name", "DiamondNew",
+        "--diamond-cut-name",
+        "DiamondCutFacet",
+        "--diamond-init-name",
+        "DiamondNew",
         "--diamond-init-args",
-          "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
-        "-f", "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+        "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
       ]
-
     },
     {
       "type": "node",

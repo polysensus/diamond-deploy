@@ -59,15 +59,19 @@ export class DiamondDeployer {
     this.options.diamondCutName = options.diamondCutName ?? "DiamondCut";
     this.options.diamondInitName = options.diamondInitName ?? "DiamondInit";
 
-    this.ignoreNames = {}
+    this.ignoreNames = {};
     for (const name of options?.ignoreNames ?? []) {
       if (name == this.options.diamondName) {
-        this.r.out(`can't ignore the diamond contract, we deal with it explicitly`);
-        continue
+        this.r.out(
+          `can't ignore the diamond contract, we deal with it explicitly`
+        );
+        continue;
       }
       if (name == this.options.diamondCutName) {
-        this.r.out(`can't ignore the diamond cut contract, we deal with it explicitly`);
-        continue
+        this.r.out(
+          `can't ignore the diamond cut contract, we deal with it explicitly`
+        );
+        continue;
       }
 
       this.ignoreNames[name] = true;
@@ -79,18 +83,18 @@ export class DiamondDeployer {
   }
 
   async processERC2535Cuts(cuts, diamondAddress) {
-
     const ownerSigner = this.options.diamondOwner ?? this.signer;
 
     // first  pass, find the Diamond and DiamondCut interfaces
     for (let co of cuts) {
-
       // If we have all from previous iteration, then we are done.
       if (this.diamond && this.diamondCut && this.diamondLoupe) break;
 
       const reader = this.readers[co.readerName];
       if (!reader) {
-        this.r.out(`reader ${co.readerName} not supported, skipping ${co.fileName}`);
+        this.r.out(
+          `reader ${co.readerName} not supported, skipping ${co.fileName}`
+        );
         continue;
       }
 
@@ -101,28 +105,51 @@ export class DiamondDeployer {
       if (co.name === this.options.diamondName) {
         co = loadCutOptions(reader, co);
         this.diamond = co;
-        if (diamondAddress) this.diamond.c = new ethers.Contract(diamondAddress, co.iface, ownerSigner);
-
+        if (diamondAddress)
+          this.diamond.c = new ethers.Contract(
+            diamondAddress,
+            co.iface,
+            ownerSigner
+          );
       } else if (co.name === this.options.diamondCutName) {
         co = loadCutOptions(reader, co);
         this.diamondCut = co;
-        if (diamondAddress) this.diamondCut.c = new ethers.Contract(diamondAddress, co.iface, ownerSigner);
+        if (diamondAddress)
+          this.diamondCut.c = new ethers.Contract(
+            diamondAddress,
+            co.iface,
+            ownerSigner
+          );
       } else if (co.name === this.options.diamondLoupeName) {
         co = loadCutOptions(reader, co);
         this.diamondLoupe = co;
-        if (diamondAddress) this.diamondLoupe.c = new ethers.Contract(diamondAddress, co.iface, ownerSigner);
+        if (diamondAddress)
+          this.diamondLoupe.c = new ethers.Contract(
+            diamondAddress,
+            co.iface,
+            ownerSigner
+          );
       } else {
-        continue // neither Diamond nor DiamondCut so skip
+        continue; // neither Diamond nor DiamondCut so skip
       }
-      if (!(co.iface && co.bytecode && co.deployedBytecode && co.runtimeHash)) throw Error(`missing interface of bytecode from ${co.fileName}`);
+      if (!(co.iface && co.bytecode && co.deployedBytecode && co.runtimeHash))
+        throw Error(`missing interface of bytecode from ${co.fileName}`);
       // never delegated
       co.removeSignatures("init(bytes)");
     }
 
-    if (!this.diamond) throw Error(`diamond options (and diamond abi) are required, even when upgrading`);
-    if (!this.diamondCut) throw Error(`diamond cut interface options (and DiamondCut abi) are required`);
-    if (!this.diamondLoupe) throw Error(`diamond loupe interface options (and DiamondLoupe abi) are required`);
-
+    if (!this.diamond)
+      throw Error(
+        `diamond options (and diamond abi) are required, even when upgrading`
+      );
+    if (!this.diamondCut)
+      throw Error(
+        `diamond cut interface options (and DiamondCut abi) are required`
+      );
+    if (!this.diamondLoupe)
+      throw Error(
+        `diamond loupe interface options (and DiamondLoupe abi) are required`
+      );
   }
 
   /**
@@ -135,17 +162,25 @@ export class DiamondDeployer {
    * @param {*} cuts
    */
   async processCuts(cuts) {
-
     const dryRunModeMsg = this.options.dryRun ? "[dry-run] " : "";
 
-    const isNew = !(!!this.diamond.c && !!this.diamondCut.c && !!this.diamondLoupe.c)
+    const isNew = !(
+      !!this.diamond.c &&
+      !!this.diamondCut.c &&
+      !!this.diamondLoupe.c
+    );
     // now throw if we are in a wierd state where we have one or more but not all
-    if (isNew && (!!this.diamond.c || !!this.diamondCut.c || !!this.diamondLoupe.c)) {
-      throw new Error(`Can't upgrade safely, some, but not all, of the erc 2535 contracts are already bound`);
+    if (
+      isNew &&
+      (!!this.diamond.c || !!this.diamondCut.c || !!this.diamondLoupe.c)
+    ) {
+      throw new Error(
+        `Can't upgrade safely, some, but not all, of the erc 2535 contracts are already bound`
+      );
     }
 
-    const selectorActions = {}
-    const deployedCode = {} // keccak(deployedCode) -> address
+    const selectorActions = {};
+    const deployedCode = {}; // keccak(deployedCode) -> address
 
     // For each facet we successfuly deploy determine if each selector it
     // implements is being *added* or *replaced". We can't use the discovered
@@ -158,30 +193,31 @@ export class DiamondDeployer {
     if (this.diamondLoupe.c) {
       const facets = await this.diamondLoupe.c.facets();
       for (const f of facets) {
-
         const code = await this.signer.provider.getCode(f.facetAddress);
-        if (code != '0x') {
-          deployedCode[ethers.utils.keccak256(ethers.utils.arrayify(code))] = f.facetAddress;
+        if (code != "0x") {
+          deployedCode[ethers.utils.keccak256(ethers.utils.arrayify(code))] =
+            f.facetAddress;
         }
 
         for (const s of f.functionSelectors) {
           // Note that the Add/Replace/Remove semantics of ERC 2535 guarantee
           // the same selector can not be set  (or set and orphaned) for
           // multiple facets.
-          selectorActions[s] = {address:f.facetAddress}
+          selectorActions[s] = { address: f.facetAddress };
         }
       }
     }
 
     for (let co of cuts) {
-
       if (this.ignoreNames[co.name]) {
         this.r.out(`* ignoring ${co.name} as directed`);
         continue;
       }
       const reader = this.readers[co.readerName];
       if (!reader) {
-        this.r.out(`reader ${co.readerName} not supported, skipping ${co.fileName}`);
+        this.r.out(
+          `reader ${co.readerName} not supported, skipping ${co.fileName}`
+        );
         continue;
       }
 
@@ -195,7 +231,11 @@ export class DiamondDeployer {
       }
 
       if (deployedCode[co.runtimeHash]) {
-        this.r.out(`skipping ${co.name} matching code already deployed at @${deployedCode[co.runtimeHash]}`)
+        this.r.out(
+          `skipping ${co.name} matching code already deployed at @${
+            deployedCode[co.runtimeHash]
+          }`
+        );
         continue;
       }
 
@@ -206,11 +246,16 @@ export class DiamondDeployer {
 
       // cut contracts are always deployed by the deployer key
       if (!this.options.dryRun) {
-        const address = await this.tryDeploy(this.signer, co.iface, co.bytecode, co);
+        const address = await this.tryDeploy(
+          this.signer,
+          co.iface,
+          co.bytecode,
+          co
+        );
         if (isError(address)) continue;
         co.address = address;
       } else {
-        this.r.out(`${dryRunModeMsg}skip deploy ${co.name}`)
+        this.r.out(`${dryRunModeMsg}skip deploy ${co.name}`);
       }
 
       if (co.name == this.options.diamondInitName) {
@@ -225,7 +270,9 @@ export class DiamondDeployer {
           // on the *existing* diamond. Note we don't need to do any special
           // book keeping, if we have the old cutter then co.c.address !=
           // co.address
-          this.r.out(`${dryRunModeMsg}upgrading the cutter facet to ${co.address}`)
+          this.r.out(
+            `${dryRunModeMsg}upgrading the cutter facet to ${co.address}`
+          );
         } else {
           this.diamondCut = co;
           // the diamondCut is added in the diamond constructor
@@ -235,9 +282,10 @@ export class DiamondDeployer {
 
       let action = FacetCutAction.Add;
       for (const s of co.selectors) {
-        const a = selectorActions[s]
-        if (!a) continue
-        if (a.action) throw Error(`duplicate selectors encountered ${co.fileName}`);
+        const a = selectorActions[s];
+        if (!a) continue;
+        if (a.action)
+          throw Error(`duplicate selectors encountered ${co.fileName}`);
         action = a.action = FacetCutAction.Replace;
       }
 
@@ -261,7 +309,8 @@ export class DiamondDeployer {
       this.diamond &&
       this.diamondCut &&
       this.diamondCut.iface &&
-      ((this.diamondCut.c?.address ?? this.diamondCut.address) || (this.diamond.c?.address ?? this.diamond.address)) &&
+      ((this.diamondCut.c?.address ?? this.diamondCut.address) ||
+        (this.diamond.c?.address ?? this.diamond.address)) &&
       this.signer &&
       this.errors.length === 0
     );
@@ -297,25 +346,27 @@ export class DiamondDeployer {
       );
     }
     if (!this.diamondCut.c) {
-      this.diamondCut.c = new ethers.Contract(this.diamond.c.address, this.diamondCut.iface, ownerSigner);
+      this.diamondCut.c = new ethers.Contract(
+        this.diamond.c.address,
+        this.diamondCut.iface,
+        ownerSigner
+      );
     }
 
     let diamondInitAddr, initCalldata;
     if (!this.diamondInit?.address) {
-      diamondInitAddr = ethers.constants.AddressZero
+      diamondInitAddr = ethers.constants.AddressZero;
     } else {
-      diamondInitAddr = this.diamondInit.address
+      diamondInitAddr = this.diamondInit.address;
       if (this.options.diamondInitArgs) {
         const args = JSON.parse(this.options.diamondInitArgs);
-        initCalldata = this.diamondInit.iface.encodeFunctionData(
-          "init",
-          args
-        );
+        initCalldata = this.diamondInit.iface.encodeFunctionData("init", args);
       }
     }
     if (this.facetCuts.length === 0)
       return new DeployResult({
-        status:0, msg: `diamond @${this.diamond.c.address} nothing to do or all up to date`
+        status: 0,
+        msg: `diamond @${this.diamond.c.address} nothing to do or all up to date`,
       });
 
     const tx = await this.diamondCut.c.diamondCut(
@@ -334,10 +385,11 @@ export class DiamondDeployer {
     return DeployResult.fromSuccess(
       tx,
       receipt,
-      `Diamond@${this.diamond.c?.address ?? this.diamond.address}, upgrade ok: tx=${tx.hash}`
+      `Diamond@${
+        this.diamond.c?.address ?? this.diamond.address
+      }, upgrade ok: tx=${tx.hash}`
     );
   }
-
 
   /**
    * Attempt a deploy and return the result if successful. if an exception
@@ -353,28 +405,36 @@ export class DiamondDeployer {
    * @returns {string|import('ethers').UnsignedTransaction|erorr} address, unsigned transaction or an error
    */
   async tryDeploy(signer, iface, bytecode, co, ...args) {
-
     try {
-      const overrides = {}
-      if (this.options?.gaslimit || this.options?.gasprice || this.options?.legacy) {
+      const overrides = {};
+      if (
+        this.options?.gaslimit ||
+        this.options?.gasprice ||
+        this.options?.legacy
+      ) {
         if (this.options?.gaslimit)
           overrides.gasLimit = Number.parseInt(this.options?.gaslimit);
         if (this.options?.gasprice)
-          overrides.gasPrice = ethers.utils.parseUnits(this.options?.gasprice, "gwei");
-        if (this.options?.legacy)
-          overrides.type = 0;
+          overrides.gasPrice = ethers.utils.parseUnits(
+            this.options?.gasprice,
+            "gwei"
+          );
+        if (this.options?.legacy) overrides.type = 0;
       }
 
       if (this.options?.replace) {
-        const pendingNonce = await signer.getTransactionCount('pending');
+        const pendingNonce = await signer.getTransactionCount("pending");
         const current = await signer.getTransactionCount();
         if (pendingNonce != current) {
-          this.r.out(`${pendingNonce - current} pending transaction, replacing ${current}`);
+          this.r.out(
+            `${
+              pendingNonce - current
+            } pending transaction, replacing ${current}`
+          );
           overrides.nonce = current;
         }
       }
-      if (Object.keys(overrides).length > 0)
-        args.push(overrides);
+      if (Object.keys(overrides).length > 0) args.push(overrides);
 
       // facets are not allowed constructor arguments
       const [address, tx, msg] = await deployContract(
@@ -389,7 +449,7 @@ export class DiamondDeployer {
       this.results.push(tx ?? msg);
       return tx ?? address;
     } catch (err) {
-      console.log(`${err}`)
+      console.log(`${err}`);
       this.errors.push([co, err]);
       return err;
     }
@@ -412,7 +472,6 @@ export class DiamondDeployer {
       )
     );
   }
-
 }
 
 /**
@@ -427,7 +486,9 @@ export function loadCutOptions(reader, co) {
   co.iface = iface;
   co.bytecode = solOutput.bytecode;
   co.deployedBytecode = solOutput.deployedBytecode;
-  co.runtimeHash = ethers.utils.keccak256(ethers.utils.arrayify(co.deployedBytecode.object));
+  co.runtimeHash = ethers.utils.keccak256(
+    ethers.utils.arrayify(co.deployedBytecode.object)
+  );
   co.sol = solOutput;
   return co;
 }
@@ -437,7 +498,9 @@ export async function deployContract(r, iface, bytecode, signer, co, ...args) {
 
   if (signer) {
     const facet = await factory.deploy(...args);
-    r.info(`from: ${facet.deployTransaction.from} contract@${facet.address} deploy tx: ${facet.deployTransaction.hash}`);
+    r.info(
+      `from: ${facet.deployTransaction.from} contract@${facet.address} deploy tx: ${facet.deployTransaction.hash}`
+    );
     await facet.deployed();
     const msg = `deployed facet ${co.name}@${facet.address}`;
     return [facet.address, null, msg];

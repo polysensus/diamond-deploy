@@ -5,7 +5,6 @@ import { programConnect } from "./connect.js";
 import { resolveHardhatKey } from "./hhkeys.js";
 import { deriveContractAddress } from "../lib/deployment/deriveaddress.js";
 
-
 import { Reporter } from "../lib/reporter.js";
 
 export async function diamondFromAccountNonce(program, options) {
@@ -22,12 +21,16 @@ export async function diamondFromAccountNonce(program, options) {
   const signer = programConnect(program, false, deploykey);
 
   const diamond = await deriveContractAddress(
-    r, signer, signer.address, options.diamondNonce)
+    r,
+    signer,
+    signer.address,
+    options.diamondNonce
+  );
 
   if (!diamond) {
-    r.out(`diamond address not found`)
-    process.exit(1)
+    r.out(`diamond address not found`);
+    process.exit(1);
   }
-  r.out(`${diamond}`)
-  process.exit(0)
+  r.out(`${diamond}`);
+  process.exit(0);
 }

@@ -33,20 +33,29 @@ export async function deployDiamondUpgrade(program, options) {
   const signer = programConnect(program, false, deploykey);
 
   let diamond;
-  if (options.diamondAddress) 
+  if (options.diamondAddress)
     diamond = ethers.utils.getAddress(options.diamondAddress);
   else
-    diamond = await deriveContractAddress(r, signer, signer.address, options.diamondNonce)
+    diamond = await deriveContractAddress(
+      r,
+      signer,
+      signer.address,
+      options.diamondNonce
+    );
 
   if (!diamond) {
-    r.out(`diamond address not provided and not infered from deploy key`)
-    process.exit(1)
+    r.out(`diamond address not provided and not infered from deploy key`);
+    process.exit(1);
   }
 
   options.diamondAddress = diamond;
 
   if (options.diamondOwnerKey) {
-    options.diamondOwner = await resolveSigner(options.diamondOwnerKey, signer.provider, signer);
+    options.diamondOwner = await resolveSigner(
+      options.diamondOwnerKey,
+      signer.provider,
+      signer
+    );
   }
 
   const cuts = readJson(options.facets ?? "facets.json").map(

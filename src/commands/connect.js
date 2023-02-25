@@ -28,7 +28,7 @@ export function resolveSigner(candidateKey, provider, defaultSigner) {
     return defaultSigner;
   }
 
-  let signer = candidateKey
+  let signer = candidateKey;
   if (isFile(candidateKey)) {
     signer = readHexKey(signer);
   }
