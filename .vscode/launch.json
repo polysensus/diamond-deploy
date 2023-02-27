@@ -21,7 +21,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "** diamond find",
+      "name": "diamond find",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [
@@ -37,7 +37,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "** chaintrap polygon upgrade",
+      "name": "chaintrap polygon upgrade",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [
@@ -70,7 +70,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "** chaintrap hh deploy",
+      "name": "chaintrap hh deploy",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [
@@ -97,7 +97,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "** chaintrap polygon deploy",
+      "name": "chaintrap polygon deploy",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [

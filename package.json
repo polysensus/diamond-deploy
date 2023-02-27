@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "description": "deployment library and tool for ERC 2535 diamond standard",
-  "main": "dist/diamond-deploy.cjs.js",
+  "main": "dist/diamond-deploy.cjs",
   "module": "dist/diamond-deploy.esm.js",
   "browser": "dist/diamond-deploy.umd.js",
   "deploycli": "dist/deploycli.esm.js",

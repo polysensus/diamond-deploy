@@ -10,8 +10,8 @@ export class DeployResult {
     return new DeployResult({ status: 1, msg, err });
   }
 
-  static fromSuccess(tx, receipt, msg) {
-    return new DeployResult({ status: 0, tx, receipt, msg });
+  static fromSuccess(address, tx, receipt, msg) {
+    return new DeployResult({ address: address, status: 0, tx, receipt, msg });
   }
 
   static fromStatus(status, msg) {
@@ -56,8 +56,9 @@ export class DiamondDeployer {
     this.options = options ?? {};
 
     this.options.diamondName = options.diamondName ?? "Diamond";
-    this.options.diamondCutName = options.diamondCutName ?? "DiamondCut";
-    this.options.diamondInitName = options.diamondInitName ?? "DiamondInit";
+    this.options.diamondCutName = options.diamondCutName ?? "DiamondCutFacet";
+    this.options.diamondLoupeName = options.diamondLoupeName ?? "DiamondLoupeFacet";
+    this.options.diamondInitName = options.diamondInitName ?? "DiamondNew";
 
     this.ignoreNames = {};
     for (const name of options?.ignoreNames ?? []) {
@@ -383,6 +384,7 @@ export class DiamondDeployer {
       );
 
     return DeployResult.fromSuccess(
+      this.diamond.c?.address ?? this.diamond.address,
       tx,
       receipt,
       `Diamond@${
