@@ -24,7 +24,8 @@ export class DeployResult {
     return new DeployResult({ status: 1, receipt, tx, msg, err });
   }
 
-  constructor({ status, tx, receipt, msg, err }) {
+  constructor({ address, status, tx, receipt, msg, err }) {
+    this.address = address;
     this.status = status;
     this.tx = tx;
     this.receipt = receipt;
