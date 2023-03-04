@@ -70,7 +70,28 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "chaintrap hh deploy",
+      "name": "*** chaintrap hh deploy up",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-d",
+        "hardhat:10",
+        "diamond-up",
+        "--replace",
+        "--gaslimit",
+        "3000000",
+        "--legacy",
+        "--diamond-owner-key", "hardhat",
+        "--ignore-names", "DiamondNew",
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "chaintrap hh deploy new",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [

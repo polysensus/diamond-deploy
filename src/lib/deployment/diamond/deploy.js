@@ -374,7 +374,7 @@ export class DiamondDeployer {
     const tx = await this.diamondCut.c.diamondCut(
       this.facetCuts,
       diamondInitAddr,
-      initCalldata
+      initCalldata ?? "0x"
     );
     const receipt = await tx.wait();
     if (!receipt.status)

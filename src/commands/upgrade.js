@@ -37,10 +37,9 @@ export async function deployDiamondUpgrade(program, options) {
     diamond = ethers.utils.getAddress(options.diamondAddress);
   else
     diamond = await deriveContractAddress(
-      r,
       signer,
       signer.address,
-      options.diamondNonce
+      {log:r, nonce:options.diamondNonce}
     );
 
   if (!diamond) {
