@@ -82,6 +82,17 @@ export class DiamondDeployer {
     this.diamond = options.diamond ?? null;
     this.diamondCut = null;
     this.diamondInit = null;
+
+    // co.fileName -> co for loadCutOptions
+    this._cutOptions = {};
+  }
+
+  loadCutOptions(reader, co) {
+
+    if (this._cutOptions[co.fileName]) return this._cutOptions[co.fileName];
+    co = loadCutOptions(reader, co);
+    this._cutOptions[co.fileName] = co;
+    return co;
   }
 
   async processERC2535Cuts(cuts, diamondAddress) {
@@ -105,7 +116,7 @@ export class DiamondDeployer {
       // current cutter. Otherwise, just hang on to the interfaces and bytecode
       // for later deployment.
       if (co.name === this.options.diamondName) {
-        co = loadCutOptions(reader, co);
+        co = this.loadCutOptions(reader, co);
         this.diamond = co;
         if (diamondAddress)
           this.diamond.c = new ethers.Contract(
@@ -114,7 +125,7 @@ export class DiamondDeployer {
             ownerSigner
           );
       } else if (co.name === this.options.diamondCutName) {
-        co = loadCutOptions(reader, co);
+        co = this.loadCutOptions(reader, co);
         this.diamondCut = co;
         if (diamondAddress)
           this.diamondCut.c = new ethers.Contract(
@@ -123,7 +134,7 @@ export class DiamondDeployer {
             ownerSigner
           );
       } else if (co.name === this.options.diamondLoupeName) {
-        co = loadCutOptions(reader, co);
+        co = this.loadCutOptions(reader, co);
         this.diamondLoupe = co;
         if (diamondAddress)
           this.diamondLoupe.c = new ethers.Contract(
@@ -155,7 +166,50 @@ export class DiamondDeployer {
   }
 
   /**
-   * deploy each item in cuts that isn't a contract with specific deployment behaviour in EIP 2535
+   * read the cut options for each entry in cuts 
+   * @param {*} cuts 
+   * @param {*} deployedCode optional, any cut option with a runtime hash found in this object is skipped.
+   */
+  *readCutOptions(cuts, deployedCode = undefined) {
+
+    deployedCode = deployedCode ?? {}
+
+    for (let co of cuts) {
+      if (this.ignoreNames[co.name]) {
+        this.r.out(`* ignoring ${co.name} as directed`);
+        continue;
+      }
+      const reader = this.readers[co.readerName];
+      if (!reader) {
+        this.r.out(
+          `reader ${co.readerName} not supported, skipping ${co.fileName}`
+        );
+        continue;
+      }
+
+      co = this.loadCutOptions(reader, co);
+
+      // capture the Diamond, the facet options must be supplied even if we are
+      // upgrading. We never deploy the diamond here. Use deploy-new if the
+      // diamond code has actually changed.
+      if (co.name === this.options.diamondName) {
+        continue;
+      }
+
+      if (deployedCode[co.runtimeHash]) {
+        this.r.out(
+          `skipping ${co.name} matching code already deployed at @${
+            deployedCode[co.runtimeHash]
+          }`
+        );
+        continue;
+      }
+      yield co;
+    }
+  }
+
+  /**
+   * deploy each item in cuts that isn't a contract with specific deployment behavior in EIP 2535
    * specifically handled are named by the options see {@link reset}
    * - diamond - the sources are read but the contract is not deployed
    * - diamondCut - the sources are read and the contract is deployed
@@ -184,7 +238,7 @@ export class DiamondDeployer {
     const selectorActions = {};
     const deployedCode = {}; // keccak(deployedCode) -> address
 
-    // For each facet we successfuly deploy determine if each selector it
+    // For each facet we successfully deploy determine if each selector it
     // implements is being *added* or *replaced". We can't use the discovered
     // list of facets on the currently deployed diamond as a baseline for
     // determining selectors to remove. Firstly because its awkward to require
@@ -210,36 +264,37 @@ export class DiamondDeployer {
       }
     }
 
-    for (let co of cuts) {
-      if (this.ignoreNames[co.name]) {
-        this.r.out(`* ignoring ${co.name} as directed`);
-        continue;
+    // To detect deletions we need to start with all the discovered selectors
+    // and then remove those that are found in the new facets. Those that remain
+    // are the selectors we need to delete. The DiamondCut rules, and the
+    // diamond proxy design, ensure that a selector can only be present on a
+    // single facet at a time.
+    // Note: For a new deploy selectorActions will be empty
+    const selectorDeletes = {...selectorActions}
+    for (const co of this.readCutOptions(cuts, deployedCode)) {
+      for (const s of co.selectors) {
+        delete selectorDeletes[s];
       }
-      const reader = this.readers[co.readerName];
-      if (!reader) {
-        this.r.out(
-          `reader ${co.readerName} not supported, skipping ${co.fileName}`
-        );
-        continue;
-      }
+    }
 
-      co = loadCutOptions(reader, co);
+    // Now, ensure there is a single delete for each facet that implements any deleted selectors
+    const facetDeletes = {}
+    for (const s in selectorDeletes) {
+      const selectors = facetDeletes[selectorDeletes[s].address] ?? [];
+      selectors.push(s);
+      facetDeletes[selectorDeletes[s].address] = selectors;
+      this.r.out(
+        `deleting selector ${s} included from @${selectorDeletes[s].address}`);
+    }
+    for (const address in facetDeletes) {
+        this.facetCuts.push({
+          facetAddress: ethers.constants.AddressZero,
+          action: FacetCutAction.Remove,
+          functionSelectors: facetDeletes[address],
+        });
+    }
 
-      // capture the Diamond, the facet options must be supplied even if we are
-      // upgrading. We never deploy the diamond here. Use deploy-new if the
-      // diamond code has actually changed.
-      if (co.name === this.options.diamondName) {
-        continue;
-      }
-
-      if (deployedCode[co.runtimeHash]) {
-        this.r.out(
-          `skipping ${co.name} matching code already deployed at @${
-            deployedCode[co.runtimeHash]
-          }`
-        );
-        continue;
-      }
+    for (const co of this.readCutOptions(cuts, deployedCode)) {
 
       // note: we allow the DiamondCut implementation to be upgraded
 
@@ -282,22 +337,43 @@ export class DiamondDeployer {
         }
       }
 
-      let action = FacetCutAction.Add;
+      // Any selector that was deleted from one address may need to be added for another. This 
+
+      const add = [];
+      const replace = [];
+
       for (const s of co.selectors) {
         const a = selectorActions[s];
-        if (!a) continue;
-        if (a.action)
-          throw Error(`duplicate selectors encountered ${co.fileName}`);
-        action = a.action = FacetCutAction.Replace;
+
+        // if it wasn't found on the deployed contract stick with 'Add'
+        if (!a) {
+          this.r.out(`add ${s} ${co.name}`);
+          add.push(s)
+          continue;
+        }
+
+        // Otherwise we are replacing
+        replace.push(s);
+
+        this.r.out(`replace ${s} ${co.name}`);
       }
 
       // note for dry-run mode co.address is undefined
       if (!isError(co.address)) {
-        this.facetCuts.push({
-          facetAddress: co.address,
-          action: action,
-          functionSelectors: co.selectors,
-        });
+        if (add.length > 0) {
+          this.facetCuts.push({
+            facetAddress: co.address,
+            action: FacetCutAction.Add,
+            functionSelectors: add,
+          });
+        }
+        if (replace.length > 0) {
+          this.facetCuts.push({
+            facetAddress: co.address,
+            action: FacetCutAction.Replace,
+            functionSelectors: replace,
+          });
+        }
       }
     }
   }
