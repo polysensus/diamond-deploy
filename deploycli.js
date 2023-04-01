@@ -26,7 +26,7 @@ program.addOption(
 program
   .command("find")
   .description(
-    `attempt to find a diamon implementing contract for an EOA. Search from the last nonce back by default or the specified one otherwise.`
+    `attempt to find a diamond implementing contract for an EOA. Search from the last nonce back by default or the specified one otherwise.`
   )
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
@@ -40,7 +40,7 @@ program
 program
   .command("diamond-up")
   .description(
-    `update an existing deploy a new diamond, this deploys a new proxy contract with empty state and cuts in the facets`
+    "upgrade an existing diamond proxy with new or updated facets. WARNING: this command REMOVES any selectors not present in the --facet file"
   )
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
