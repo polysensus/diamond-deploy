@@ -327,7 +327,7 @@ export class DiamondDeployer {
           // on the *existing* diamond. Note we don't need to do any special
           // book keeping, if we have the old cutter then co.c.address !=
           // co.address
-          this.r.out(
+          this.r.debug(
             `${dryRunModeMsg}upgrading the cutter facet to ${co.address}`
           );
         } else {
@@ -347,7 +347,7 @@ export class DiamondDeployer {
 
         // if it wasn't found on the deployed contract stick with 'Add'
         if (!a) {
-          this.r.out(`add ${s} ${co.name}`);
+          this.r.debug(`add ${s} ${co.name}`);
           add.push(s)
           continue;
         }
@@ -355,7 +355,7 @@ export class DiamondDeployer {
         // Otherwise we are replacing
         replace.push(s);
 
-        this.r.out(`replace ${s} ${co.name}`);
+        this.r.debug(`replace ${s} ${co.name}`);
       }
 
       // note for dry-run mode co.address is undefined
