@@ -42,7 +42,6 @@ jobs:
           echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
 
       - name: build
-        working-directory: chaintrap-arenastate
         run: |
           npm run lint
           npm run build
@@ -74,7 +73,7 @@ jobs:
         uses: actions/delete-package-versions@v4
         if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         with:
-          package-name: "chaintrap-arenastate"
+          package-name: "diamond-deploy"
           package-type: "npm"
           min-versions-to-keep: 3
 
