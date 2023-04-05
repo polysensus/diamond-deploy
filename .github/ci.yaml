@@ -23,6 +23,24 @@ jobs:
           repository: polysensus/diamond-deploy
           submodules: recursive
 
+      - name: Setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.15.0
+
+      - name: Install go-tusk and go-task
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+
+          # go-task
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- \
+            -d -b $GITHUB_WORKSPACE/bin
+
+          # go-tusk
+          curl -sL https://git.io/tusk | bash -s -- -b $GITHUB_WORKSPACE/bin latest
+          chmod a+x $GITHUB_WORKSPACE/bin/tusk
+          echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
+
       - name: build
         working-directory: chaintrap-arenastate
         run: |
@@ -34,7 +52,6 @@ jobs:
           echo "No tests defined yet ..."
 
       - name: publish npm package
-        working-directory: chaintrap-arenastate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
