@@ -1,5 +1,5 @@
 // derived from: https://github.com/rollup/rollup-starter-lib/blob/master/rollup.config.js
-import resolve from "@rollup/plugin-node-resolve";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import pkg from "./package.json" assert { type: "json" };
@@ -12,8 +12,12 @@ export default [
       name: pkg.name,
       file: pkg.deploycli,
       format: "es",
+      banner: `
+import * as xcrypto from 'crypto';
+global.crypto = xcrypto;
+`
     },
-    plugins: [json(), resolve(), commonjs()],
+    plugins: [json(), nodeResolve(), commonjs()],
   },
 
   {
@@ -24,7 +28,7 @@ export default [
       file: pkg.browser,
       format: "umd",
     },
-    plugins: [json(), resolve(), commonjs()],
+    plugins: [json(), nodeResolve(), commonjs()],
   },
   {
     // Note: it is faster to generate multiple builds from the same config
@@ -45,6 +49,6 @@ export default [
         sourcemap: true,
       },
     ],
-    plugins: [json(), resolve(), commonjs()],
+    plugins: [json(), nodeResolve(), commonjs()],
   },
 ];

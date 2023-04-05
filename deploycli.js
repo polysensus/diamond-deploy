@@ -2,6 +2,10 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
+// import {ethers} from 'ethers';
+// ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR);
+// // ethers.utils.Logger.setLogLevel("off");
+
 import { program, Option } from "commander";
 
 import { deployNewDiamond } from "./src/commands/deploy.js";
