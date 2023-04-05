@@ -33,7 +33,7 @@ const diamondCutFacetId = "0x1f931c1c";
  * Derive the address the externaly owned account last deployed a contract to.
  * Assuming that the last transaction for that address _was_ a contract
  * deployment.
- * @param {object} provider to access the chain 
+ * @param {object} provider to access the chain
  * @param {string} from account that deployed the contract
  * @param {object} options. the log property is used for reporting. the nonce
  * sets the account nonce from which to start (we search down to zero)
@@ -41,7 +41,7 @@ const diamondCutFacetId = "0x1f931c1c";
 export async function deriveContractAddress(
   provider,
   from,
-  {nonce, log}={nonce:undefined, log:undefined}
+  { nonce, log } = { nonce: undefined, log: undefined }
 ) {
   // Note: if the provider is a signer then getTransactionCount is specifically
   // bound to the signer's wallet and passing an additional address just breaks.

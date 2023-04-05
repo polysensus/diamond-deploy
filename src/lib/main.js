@@ -4,9 +4,7 @@ import {
   BaseReader,
   stripFinderRoot,
 } from "./deployment/finder.js";
-import {
-  FileReader
-} from "./deployment/filefinder/reader.js";
+import { FileReader } from "./deployment/filefinder/reader.js";
 import { DiamondDeployer } from "./deployment/diamond/deploy.js";
 import { FacetSelectorSet, FacetCutOpts } from "./deployment/diamond/facet.js";
 import { Reporter } from "./reporter.js";
@@ -24,5 +22,5 @@ export {
   FileReader,
   Reporter,
   Selectors,
-  stripFinderRoot
+  stripFinderRoot,
 };

@@ -58,7 +58,8 @@ export class DiamondDeployer {
 
     this.options.diamondName = options.diamondName ?? "Diamond";
     this.options.diamondCutName = options.diamondCutName ?? "DiamondCutFacet";
-    this.options.diamondLoupeName = options.diamondLoupeName ?? "DiamondLoupeFacet";
+    this.options.diamondLoupeName =
+      options.diamondLoupeName ?? "DiamondLoupeFacet";
     this.options.diamondInitName = options.diamondInitName ?? "DiamondNew";
 
     this.ignoreNames = {};
@@ -88,7 +89,6 @@ export class DiamondDeployer {
   }
 
   loadCutOptions(reader, co) {
-
     if (this._cutOptions[co.fileName]) return this._cutOptions[co.fileName];
     co = loadCutOptions(reader, co);
     this._cutOptions[co.fileName] = co;
@@ -166,13 +166,12 @@ export class DiamondDeployer {
   }
 
   /**
-   * read the cut options for each entry in cuts 
-   * @param {*} cuts 
+   * read the cut options for each entry in cuts
+   * @param {*} cuts
    * @param {*} deployedCode optional, any cut option with a runtime hash found in this object is skipped.
    */
   *readCutOptions(cuts, deployedCode = undefined) {
-
-    deployedCode = deployedCode ?? {}
+    deployedCode = deployedCode ?? {};
 
     for (let co of cuts) {
       if (this.ignoreNames[co.name]) {
@@ -270,7 +269,7 @@ export class DiamondDeployer {
     // diamond proxy design, ensure that a selector can only be present on a
     // single facet at a time.
     // Note: For a new deploy selectorActions will be empty
-    const selectorDeletes = {...selectorActions}
+    const selectorDeletes = { ...selectorActions };
     for (const co of this.readCutOptions(cuts, deployedCode)) {
       for (const s of co.selectors) {
         delete selectorDeletes[s];
@@ -278,24 +277,24 @@ export class DiamondDeployer {
     }
 
     // Now, ensure there is a single delete for each facet that implements any deleted selectors
-    const facetDeletes = {}
+    const facetDeletes = {};
     for (const s in selectorDeletes) {
       const selectors = facetDeletes[selectorDeletes[s].address] ?? [];
       selectors.push(s);
       facetDeletes[selectorDeletes[s].address] = selectors;
       this.r.out(
-        `deleting selector ${s} included from @${selectorDeletes[s].address}`);
+        `deleting selector ${s} included from @${selectorDeletes[s].address}`
+      );
     }
     for (const address in facetDeletes) {
-        this.facetCuts.push({
-          facetAddress: ethers.constants.AddressZero,
-          action: FacetCutAction.Remove,
-          functionSelectors: facetDeletes[address],
-        });
+      this.facetCuts.push({
+        facetAddress: ethers.constants.AddressZero,
+        action: FacetCutAction.Remove,
+        functionSelectors: facetDeletes[address],
+      });
     }
 
     for (const co of this.readCutOptions(cuts, deployedCode)) {
-
       // note: we allow the DiamondCut implementation to be upgraded
 
       // never delegated
@@ -337,7 +336,7 @@ export class DiamondDeployer {
         }
       }
 
-      // Any selector that was deleted from one address may need to be added for another. This 
+      // Any selector that was deleted from one address may need to be added for another. This
 
       const add = [];
       const replace = [];
@@ -348,7 +347,7 @@ export class DiamondDeployer {
         // if it wasn't found on the deployed contract stick with 'Add'
         if (!a) {
           this.r.debug(`add ${s} ${co.name}`);
-          add.push(s)
+          add.push(s);
           continue;
         }
 

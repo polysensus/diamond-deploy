@@ -48,7 +48,8 @@
         "diamond-up",
         "--ignore-names",
         "DiamondNew",
-        "--diamond-address", "0xBCAEF1Bd82E444B68d9C47E14f22d623150CeFB5",
+        "--diamond-address",
+        "0xBCAEF1Bd82E444B68d9C47E14f22d623150CeFB5",
         // "--diamond-nonce",
         // "85",
         // "--replace",
@@ -80,8 +81,10 @@
         "--gaslimit",
         "3000000",
         "--legacy",
-        "--diamond-owner-key", "hardhat",
-        "--ignore-names", "DiamondNew",
+        "--diamond-owner-key",
+        "hardhat",
+        "--ignore-names",
+        "DiamondNew",
         "-f",
         "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
       ]

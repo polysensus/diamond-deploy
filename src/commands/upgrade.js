@@ -36,11 +36,10 @@ export async function deployDiamondUpgrade(program, options) {
   if (options.diamondAddress)
     diamond = ethers.utils.getAddress(options.diamondAddress);
   else
-    diamond = await deriveContractAddress(
-      signer,
-      signer.address,
-      {log:r, nonce:options.diamondNonce}
-    );
+    diamond = await deriveContractAddress(signer, signer.address, {
+      log: r,
+      nonce: options.diamondNonce,
+    });
 
   if (!diamond) {
     r.out(`diamond address not provided and not infered from deploy key`);

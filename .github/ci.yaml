@@ -1,0 +1,71 @@
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+name: ci
+
+jobs:
+  test:
+    name: ci build & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate as the cicd github app
+        id: cicd-app-authenticate
+        uses: polysensus/cicd-app-token@main
+        with:
+          APP_PEM: ${{ secrets.CICD_APP_PEM }}
+          APP_ID: ${{ secrets.CICD_APP_ID }}
+
+      - name: Checkout the diamond-deploy repository
+        uses: actions/checkout@v3
+        with:
+          repository: polysensus/diamond-deploy
+          submodules: recursive
+
+      - name: build
+        working-directory: chaintrap-arenastate
+        run: |
+          npm run lint
+          npm run build
+
+      - name: unit tests
+        run: |
+          echo "No tests defined yet ..."
+
+      - name: publish npm package
+        working-directory: chaintrap-arenastate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
+        run: |
+          git checkout .npmrc
+          echo "" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
+
+          # github has scale issues when there are a large (> 20 ) npm packages in
+          # a repo, so force for fixes seems like the right thing for now.
+          FORCE=""
+          if [[ ! $(git log -1 --pretty=%B) =~ '^release:v' ]]; then
+            export FORCE=--force
+          fi
+          npm publish $FORCE
+
+      - name: package cleanup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/delete-package-versions@v4
+        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
+        with:
+          package-name: "chaintrap-arenastate"
+          package-type: "npm"
+          min-versions-to-keep: 3
+
+      # this didn't work, despite looking like jest/junit format the reporter
+      # crashed when looking at the time property
+      # https://github.com/marketplace/actions/test-reporter
+      # - uses: actions/upload-artifact@v2
+      #   if: success() || failure() # even if previous failed
+      #   with:
+      #     name: test-results
+      #     path: chaintrap-arenastate/jest-junit.xml

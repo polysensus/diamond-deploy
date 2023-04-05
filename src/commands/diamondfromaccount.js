@@ -20,11 +20,10 @@ export async function diamondFromAccountNonce(program, options) {
 
   const signer = programConnect(program, false, deploykey);
 
-  const diamond = await deriveContractAddress(
-    signer,
-    signer.address,
-    {log: r, nonce: options.diamondNonce}
-  );
+  const diamond = await deriveContractAddress(signer, signer.address, {
+    log: r,
+    nonce: options.diamondNonce,
+  });
 
   if (!diamond) {
     r.info(`diamond address not found`);
