@@ -1,3 +1,4 @@
+.local
 .env.local.hh
 facets.json
 exclude.json
