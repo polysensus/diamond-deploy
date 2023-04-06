@@ -22,4 +22,3 @@ tasks:
     cmds:
       - |
         tusk -q -f {{.TUSKS}}/tusk-jspkg.yml version-update {{.CLI_ARGS}}
-
