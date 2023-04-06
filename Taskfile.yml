@@ -15,7 +15,7 @@ tasks:
       - |
         mkdir -p {{.TUSKS}}
         cd {{.TUSKS}}
-        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.2 -o tusk-jspkg.yml
+        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.5 -o tusk-jspkg.yml
 
   release:patch:
     desc: create patch release
