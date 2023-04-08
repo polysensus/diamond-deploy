@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { Reporter } from "../../reporter.js";
-import { FacetCutOpts } from "./facet.js";
+import { FacetCutOpts, DeployStatus } from "./facet.js";
 import { FacetCutAction } from "./selectors.js";
 
 const isError = (v) => v?.constructor?.name === "Error";
@@ -195,6 +195,9 @@ export class DiamondDeployer {
         continue;
       }
 
+      co.deployStatus = deployedCode[co.runtimeHash] ? DeployStatus.Deployed : DeployStatus.NotDeployed;
+
+      /* this is dangerous due to the way we decide which selectors should be deleted.
       if (deployedCode[co.runtimeHash]) {
         this.r.out(
           `skipping ${co.name} matching code already deployed at @${
@@ -202,7 +205,7 @@ export class DiamondDeployer {
           }`
         );
         continue;
-      }
+      }*/
       yield co;
     }
   }
@@ -271,6 +274,7 @@ export class DiamondDeployer {
     // Note: For a new deploy selectorActions will be empty
     const selectorDeletes = { ...selectorActions };
     for (const co of this.readCutOptions(cuts, deployedCode)) {
+      // regardless of whether each co is deployed or not, if it is found then it will not be deleted.
       for (const s of co.selectors) {
         delete selectorDeletes[s];
       }
@@ -296,6 +300,13 @@ export class DiamondDeployer {
 
     for (const co of this.readCutOptions(cuts, deployedCode)) {
       // note: we allow the DiamondCut implementation to be upgraded
+      if (co.deployStatus == DeployStatus.Deployed) {
+        this.r.out(
+          `skipping ${co.name} matching code already deployed at @${
+            deployedCode[co.runtimeHash]
+          }`);
+        continue;
+      }
 
       // never delegated
       co.removeSignatures("init(bytes)");
