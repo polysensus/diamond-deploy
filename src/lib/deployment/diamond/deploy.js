@@ -195,7 +195,9 @@ export class DiamondDeployer {
         continue;
       }
 
-      co.deployStatus = deployedCode[co.runtimeHash] ? DeployStatus.Deployed : DeployStatus.NotDeployed;
+      co.deployStatus = deployedCode[co.runtimeHash]
+        ? DeployStatus.Deployed
+        : DeployStatus.NotDeployed;
 
       /* this is dangerous due to the way we decide which selectors should be deleted.
       if (deployedCode[co.runtimeHash]) {
@@ -304,7 +306,8 @@ export class DiamondDeployer {
         this.r.out(
           `skipping ${co.name} matching code already deployed at @${
             deployedCode[co.runtimeHash]
-          }`);
+          }`
+        );
         continue;
       }
 

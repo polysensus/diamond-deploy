@@ -87,8 +87,8 @@ export class FacetSelectorSet {
 
 export class DeployStatus {
   static Unknown = undefined;
-  static NotDeployed = 'NotDeployed';
-  static Deployed = 'Deployed';
+  static NotDeployed = "NotDeployed";
+  static Deployed = "Deployed";
 }
 
 export class FacetCutOpts {
