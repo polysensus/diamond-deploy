@@ -56,8 +56,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
-          git checkout .npmrc
-          echo "" > .npmrc
+          # TODO: public npm
+          echo "@polysensus:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
 
           # github has scale issues when there are a large (> 20 ) npm packages in
