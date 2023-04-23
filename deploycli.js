@@ -8,6 +8,7 @@ dotenv.config();
 
 import { program, Option } from "commander";
 
+import { optimismDeployCosts } from "./src/commands/opcost.js";
 import { deployNewDiamond } from "./src/commands/deploy.js";
 import { deployDiamondUpgrade } from "./src/commands/upgrade.js";
 import { diamondFromAccountNonce } from "./src/commands/diamondfromaccount.js";
@@ -40,6 +41,25 @@ program
     "check addresses derived from nonces on or before this (by default all are checked if --diamond-address is not set"
   )
   .action((options) => diamondFromAccountNonce(program, options));
+
+program
+  .command("op-cost <ethprice>")
+  .option("--chainid-l1 <chainidl1>", "l1 chain id", 5)
+  .option("--chainid-l2 <chainidl2>", "l1 chain id", 420)
+  .addOption(
+    new Option(
+      "-U, --l1-url <l1url>",
+      "url for optimism L1 (goerli or mainnet)"
+    ).env("OPTIMISM_L1_URL")
+  )
+  .option("--legacy", "pre eip 1559 gas estimation")
+  .option("--gasprice <number>", "gas price in gwei for deployment.")
+  .option("--ignore-names <names...>")
+  .option(
+    "-f, --facets <facets>",
+    "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
+  )
+  .action((ethprice, options) => optimismDeployCosts(program, options, ethprice));
 
 program
   .command("diamond-up")

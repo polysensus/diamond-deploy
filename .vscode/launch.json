@@ -4,6 +4,27 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "*** chaintrap optimism dry run",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "envFile": "${workspaceFolder}/.env.opgoerli",
+      "args": [
+        "-d",
+        "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/wallet-deploy.key",
+        "op-cost",
+        "--legacy",
+        "--ignore-names",
+        "DiamondNew",
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json",
+        "1507.64"
+      ]
+    },
+
     {
       "type": "node",
       "request": "launch",
@@ -37,7 +58,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "*** chaintrap polygon upgrade",
+      "name": "chaintrap polygon upgrade",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [
@@ -70,7 +91,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "*** chaintrap hh deploy up",
+      "name": "chaintrap hh deploy up",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [

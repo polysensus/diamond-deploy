@@ -1,5 +1,6 @@
 .local
 .env.local.hh
+.env.opgoerli
 facets.json
 exclude.json
 dist

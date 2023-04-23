@@ -314,19 +314,15 @@ export class DiamondDeployer {
       // never delegated
       co.removeSignatures("init(bytes)");
 
-      // cut contracts are always deployed by the deployer key
-      if (!this.options.dryRun) {
-        const address = await this.tryDeploy(
-          this.signer,
-          co.iface,
-          co.bytecode,
-          co
-        );
-        if (isError(address)) continue;
-        co.address = address;
-      } else {
-        this.r.out(`${dryRunModeMsg}skip deploy ${co.name}`);
-      }
+      // cut contracts are always deployed by the deployer key. Note dry-run is accounted for in tryDeploy
+      const address = await this.tryDeploy(
+        this.signer,
+        co.iface,
+        co.bytecode,
+        co
+      );
+      if (isError(address)) continue;
+      co.address = address;
 
       if (co.name == this.options.diamondInitName) {
         if (!this.diamondInit) this.diamondInit = co;
@@ -529,16 +525,13 @@ export class DiamondDeployer {
       if (Object.keys(overrides).length > 0) args.push(overrides);
 
       // facets are not allowed constructor arguments
-      const [address, tx, msg] = await deployContract(
-        this.r,
-        iface,
-        bytecode,
-        signer,
-        co,
-        ...args
-      );
+      const deployer = this.options.dryRun ? deployContract : populateDeployTransaction;
+
+      const [address, tx, msg] = await deployer(
+        {r: this.r, iface, bytecode, signer, co, nonce: overrides?.nonce ?? undefined}, ...args
+        );
       this.r.out(msg);
-      this.results.push(tx ?? msg);
+      this.results.push({tx, msg, co});
       return tx ?? address;
     } catch (err) {
       console.log(`${err}`);
@@ -548,17 +541,19 @@ export class DiamondDeployer {
   }
 
   reporterrs() {
-    if (!this.errors?.length) return;
+    if (!this.errors?.length) return 0;
 
     for (const [co, err] of this.errors)
       this.r.out(
         `error creating deploy transaction for ${co.commonName} ${err}`
       );
+
+    return this.errors.length;
   }
   report() {
     this.r.out(
       JSON.stringify(
-        this.results.map((r) => r.data),
+        this.results.map((r) => [r.co.name, r.tx.data]),
         null,
         2
       )
@@ -585,23 +580,38 @@ export function loadCutOptions(reader, co) {
   return co;
 }
 
-export async function deployContract(r, iface, bytecode, signer, co, ...args) {
+export async function populateDeployTransaction(opts, ...args) {
+  const {r, iface, bytecode, signer, co} = opts;
+
+  if (!(!!r && !!iface && !!bytecode && !!co && !!signer)) throw new Error(`r, iface, bytecode and co are required`);
+
   const factory = new ethers.ContractFactory(iface, bytecode, signer);
 
-  if (signer) {
-    const facet = await factory.deploy(...args);
-    r.info(
-      `from: ${facet.deployTransaction.from} contract@${facet.address} deploy tx: ${facet.deployTransaction.hash}`
-    );
-    await facet.deployed();
-    const msg = `deployed facet ${co.name}@${facet.address}`;
-    return [facet.address, null, msg];
-  } else {
-    const tx = factory.getDeployTransaction();
-    return [
-      ethers.constants.AddressZero,
-      tx,
-      `deploy calldata for facet ${co.name}`,
-    ];
-  }
+  let tx = factory.getDeployTransaction();
+  tx = await signer.populateTransaction(tx);
+
+  const to = ethers.utils.getContractAddress({ from: tx.from, nonce: tx.nonce });
+
+  return [
+    to,
+    tx,
+    `populated calldata for facet ${co.name}`
+  ];
+}
+
+export async function deployContract(opts, ...args) {
+
+  const {r, iface, bytecode, signer, co} = opts;
+
+  if (!(!!r && !!iface && !!bytecode && !!co && !!signer)) throw new Error(`r, iface, bytecode, co and signer are required`);
+
+  const factory = new ethers.ContractFactory(iface, bytecode, signer);
+
+  const facet = await factory.deploy(...args);
+  r.info(
+    `from: ${facet.deployTransaction.from} contract@${facet.address} deploy tx: ${facet.deployTransaction.hash}`
+  );
+  await facet.deployed();
+  const msg = `deployed facet ${co.name}@${facet.address}`;
+  return [facet.address, null, msg];
 }
