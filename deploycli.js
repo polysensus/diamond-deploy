@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 import * as dotenv from "dotenv";
-dotenv.config();
+dotenv.config({path: process.env.DOTENV_FILE ?? '.env'});
 
 // import {ethers} from 'ethers';
 // ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR);
@@ -8,12 +8,19 @@ dotenv.config();
 
 import { program, Option } from "commander";
 
-import { optimismDeployCosts } from "./src/commands/opcost.js";
 import { deployNewDiamond } from "./src/commands/deploy.js";
 import { deployDiamondUpgrade } from "./src/commands/upgrade.js";
 import { diamondFromAccountNonce } from "./src/commands/diamondfromaccount.js";
 import { listSelectors } from "./src/commands/list.js";
 import { pendingTransactions } from "./src/commands/pending.js";
+
+import { addOPCost } from "./src/commands/opcost.js";
+import { addOPDeposit } from "./src/commands/opdeposit.js";
+import { addOPXCStatus } from "./src/commands/opxcstatus.js";
+import { addOPSend } from "./src/commands/opsend.js";
+import { addAccount } from "./src/commands/account.js";
+
+
 
 program.addOption(
   new Option(
@@ -28,6 +35,7 @@ program.addOption(
   )
 );
 
+//---
 program
   .command("find")
   .description(
@@ -42,25 +50,14 @@ program
   )
   .action((options) => diamondFromAccountNonce(program, options));
 
-program
-  .command("op-cost <ethprice>")
-  .option("--chainid-l1 <chainidl1>", "l1 chain id", 5)
-  .option("--chainid-l2 <chainidl2>", "l1 chain id", 420)
-  .addOption(
-    new Option(
-      "-U, --l1-url <l1url>",
-      "url for optimism L1 (goerli or mainnet)"
-    ).env("OPTIMISM_L1_URL")
-  )
-  .option("--legacy", "pre eip 1559 gas estimation")
-  .option("--gasprice <number>", "gas price in gwei for deployment.")
-  .option("--ignore-names <names...>")
-  .option(
-    "-f, --facets <facets>",
-    "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
-  )
-  .action((ethprice, options) => optimismDeployCosts(program, options, ethprice));
+//---
+addOPCost(program);
+addOPDeposit(program);
+addOPXCStatus(program);
+addOPSend(program);
+addAccount(program);
 
+//---
 program
   .command("diamond-up")
   .description(
@@ -71,8 +68,12 @@ program
   .option("-n, --dry-run")
   .option("-v, --verbose [count]", "more verbose reporting")
   .option("--ignore-names <names...>")
-  .option("--offline", "prepare unsigned transaction payloads")
   .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
+  // The diamond contract reverts if the facets have not been deployed, and this causes
+  // "UNPREDICTABLE_GAS_LIMIT" due to the revert
+  .option(
+    "--diamond-gas-limit <number>",
+    "set this when running without --commit, the diamond will revert unless the facets are actually deployed", 3500000)
   .option("--legacy", "pre eip 1559 gas estimation")
   .option("--gasprice <number>", "gas price in gwei for deployment.")
   .option(
@@ -115,8 +116,13 @@ program
     "-f, --facets <facets>",
     "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
   )
+  .option(
+    "--facets-deployed <filename>",
+`a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
+  )
   .action((options) => deployDiamondUpgrade(program, options));
 
+//---
 program
   .command("diamond-new")
   .description(
@@ -125,12 +131,17 @@ program
   .enablePositionalOptions()
   .combineFlagAndOptionalValue(false)
   .option("-v, --verbose [count]", "more verbose reporting")
-  .option("-n, --dry-run")
+  .option("-c, --commit")
   .option("--ignore-names <names...>")
-  .option("--offline", "prepare unsigned transaction payloads")
   .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
   .option("--legacy", "pre eip 1559 gas estimation")
   .option("--gasprice <number>", "gas price in gwei for deployment.")
+  // The diamond contract reverts if the facets have not been deployed, and this causes
+  // "UNPREDICTABLE_GAS_LIMIT" due to the revert
+  .option(
+    "--diamond-gas-limit <number>",
+    "set this when running without --commit, the diamond will revert unless the facets are actually deployed", 3500000)
+
   .option(
     "--replace",
     "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)"
@@ -162,6 +173,10 @@ program
   .option(
     "-f, --facets <facets>",
     "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
+  )
+  .option(
+    "--facets-deployed <filename>",
+`a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
   )
   .action((options) => deployNewDiamond(program, options));
 

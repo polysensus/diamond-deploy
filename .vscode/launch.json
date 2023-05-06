@@ -8,81 +8,74 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "*** chaintrap optimism dry run",
+      "name": "BRIDGE goerli, WALLET-DEPLOY op-xcstatus",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "envFile": "${workspaceFolder}/.env.opgoerli",
       "args": [
-        "-d",
+        "op-xcstatus",
+        "--eth-fiat", "1467.02",
+        "--account", "0xb053216998E4E11c655e3C9CEe086Bf3cc7c8Ed7",
+        "0x808372d7980cec830470ac7bf068099565ab62d56797b1b8da206ad97a198325"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "BRIDGE goerli, WALLET-DEPLOY op-deposit",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "envFile": "${workspaceFolder}/.env.opgoerli",
+      "args": [
+        "op-deposit",
+        "--eth-fiat", "1467.02",
+        "--commit",
         "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/wallet-deploy.key",
-        "op-cost",
-        "--legacy",
-        "--ignore-names",
-        "DiamondNew",
-        "-f",
-        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json",
-        "1507.64"
+        "max"
+      ]
+    },
+
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "BRIDGE goerli, ANNE's op-deposit",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "envFile": "${workspaceFolder}/.env.opgoerli",
+      "args": [
+        "op-deposit",
+        "--eth-fiat", "1514.67",
+        "--margin-percent", "25",
+        "--commit",
+        "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/ann-goerli.key",
+        "max"
       ]
     },
 
     {
       "type": "node",
       "request": "launch",
-      "name": "pending transaction count",
+      "name": "OPTIMISM chaintrap deploy new DEPLOY",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
+      "envFile": "${workspaceFolder}/.env.opgoerli",
       "args": [
-        "-u",
-        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
-        "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
-        "pending"
-      ]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "diamond find",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/deploycli.js",
-      "args": [
-        "-u",
-        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
-        "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
-        "find",
-        "--diamond-nonce",
-        "85"
-      ]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "chaintrap polygon upgrade",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/deploycli.js",
-      "args": [
-        "-u",
-        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
-        "-d",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
-        "diamond-up",
-        "--ignore-names",
-        "DiamondNew",
-        "--diamond-address",
-        "0xBCAEF1Bd82E444B68d9C47E14f22d623150CeFB5",
-        // "--diamond-nonce",
-        // "85",
-        // "--replace",
-        "--dry-run",
-        "--gaslimit",
-        "3500000",
-        // "--gasprice", "30",
-        "--gasprice",
-        "2.6",
+        "-d", "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/wallet-deploy.key",
+        "diamond-new",
+        "--facets-deployed", "${workspaceFolder:chaintrap-arenastate}/facets-deployed.json",
+        "--commit",
+        "--replace",
         "--legacy",
         "--diamond-owner-key",
-        "${workspaceFolder:chaintrap-contracts}/.local/dev/arena-owner.key",
+        "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/arena-owner.key",
+        // "--diamond-gas-limit", "3500000",
+        "--diamond-cut-name",
+        "DiamondCutFacet",
+        "--diamond-init-name",
+        "DiamondNew",
+        "--diamond-init-args",
+        "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
         "-f",
         "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
       ]
@@ -91,19 +84,82 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "chaintrap hh deploy up",
+      "name": "OPTIMISM chaintrap deploy up",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-d", "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/wallet-deploy.key",
+        "diamond-up",
+        "--diamond-address", "0xe96C10180dE39C61d41d1Eb8285da95343A7D5f2",
+        "--facets-deployed", "${workspaceFolder:chaintrap-arenastate}/facets-deployed.json",
+        "--replace",
+        "--legacy",
+        "--diamond-gas-limit", "3500000",
+        "--diamond-owner-key", "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/arena-owner.key",
+        "--ignore-names",
+        "DiamondNew",
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "OPTIMISM chaintrap deploy new DRY RUN",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "envFile": "${workspaceFolder}/.env.opgoerli",
+      "args": [
+        "-d", "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/wallet-deploy.key",
+        "diamond-new",
+        "--facets-deployed", "${workspaceFolder:chaintrap-arenastate}/facets-deployed.json",
+        "--diamond-gas-limit", "3500000",
+        "--replace",
+        "--legacy",
+        "--diamond-owner-key",
+        "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/arena-owner.key",
+        "--diamond-cut-name",
+        "DiamondCutFacet",
+        "--diamond-init-name",
+        "DiamondNew",
+        "--diamond-init-args",
+        "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "OPTIMISM op-cost",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "envFile": "${workspaceFolder}/.env.opgoerli",
+      "args": [
+        "-d", "${workspaceFolder:chaintrap-arenastate}/.local/dev/wallets/wallet-deploy.key",
+        "op-cost",
+        "--eth-fiat", "1514.67"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "HARDHAT chaintrap deploy up",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [
         "-d",
         "hardhat:10",
         "diamond-up",
+        "--diamond-address", "0x0f38340755D3CA92e032C2F871C07ECC02393176",
+        "--facets-deployed", "${workspaceFolder}/facets-deployed-2.json",
         "--replace",
-        "--gaslimit",
-        "3000000",
         "--legacy",
         "--diamond-owner-key",
-        "hardhat",
+        "hardhat:11",
         "--ignore-names",
         "DiamondNew",
         "-f",
@@ -114,16 +170,16 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "chaintrap hh deploy new",
+      "name": "HARDHAT chaintrap deploy new",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [
         "-d",
         "hardhat:10",
         "diamond-new",
+        // "--facets-deployed", "${workspaceFolder}/facets-deployed.json",
         "--replace",
-        "--gaslimit",
-        "3000000",
+        "--commit",
         "--legacy",
         "--diamond-owner-key",
         "hardhat:11",
@@ -141,7 +197,48 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "chaintrap polygon deploy",
+      "name": "MUMBAI chaintrap diamond find",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-u",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "find",
+        "--diamond-nonce",
+        "85"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "MUMBAI chaintrap upgrade",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "-u",
+        "https://polygon-mumbai.g.alchemy.com/v2/zyiZCXLwVEOZPVoixfOBBVvp7KE1oiqf",
+        "-d",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
+        "diamond-up",
+        "--ignore-names",
+        "DiamondNew",
+        "--diamond-address",
+        "0x50c2dd246A789FA83Ca8c8fC206Ff32844Cb549A",
+        "--diamond-gas-limit", "3500000",
+        "--legacy",
+        "--diamond-owner-key",
+        "${workspaceFolder:chaintrap-contracts}/.local/dev/arena-owner.key",
+        "-f",
+        "${workspaceFolder:chaintrap-arenastate}/diamond-deploy.json"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "MUMBAI chaintrap deploy",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/deploycli.js",
       "args": [
@@ -150,12 +247,11 @@
         "-d",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/wallet-deploy.key",
         "diamond-new",
+        "--commit",
         "--replace",
-        // "--gaslimit", "5000000",
-        // "--gasprice", "30",
-        "--gaslimit",
-        "3000000",
-        // "--gasprice", "200",
+        // The diamond contract reverts if the facets have not been deployed, and this causses
+        // "UNPREDICTABLE_GAS_LIMIT"
+        "--diamond-gas-limit", "3500000",
         "--legacy",
         "--diamond-owner-key",
         "${workspaceFolder:chaintrap-contracts}/.local/dev/arena-owner.key",

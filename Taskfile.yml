@@ -22,3 +22,7 @@ tasks:
     cmds:
       - |
         tusk -q -f {{.TUSKS}}/tusk-jspkg.yml version-update {{.CLI_ARGS}}
+  build:
+    desc: build the package
+    cmds:
+      - npm run build

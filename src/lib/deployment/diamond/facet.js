@@ -85,12 +85,6 @@ export class FacetSelectorSet {
   }
 }
 
-export class DeployStatus {
-  static Unknown = undefined;
-  static NotDeployed = "NotDeployed";
-  static Deployed = "Deployed";
-}
-
 export class FacetCutOpts {
   static DeployStatusNotDeployed = "NotDeployed";
 
@@ -110,7 +104,6 @@ export class FacetCutOpts {
     this.readerName = readerName;
     this.selectors = [...selectors];
     this.signatures = [...signatures];
-    this.deployStatus = DeployStatus.Unknown;
   }
 
   /** removeSignature removes a signature and its associated selector

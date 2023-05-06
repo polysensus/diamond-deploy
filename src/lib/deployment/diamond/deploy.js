@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { Reporter } from "../../reporter.js";
-import { FacetCutOpts, DeployStatus } from "./facet.js";
+import { FacetCutOpts } from "./facet.js";
 import { FacetCutAction } from "./selectors.js";
 
 const isError = (v) => v?.constructor?.name === "Error";
@@ -168,10 +168,10 @@ export class DiamondDeployer {
   /**
    * read the cut options for each entry in cuts
    * @param {*} cuts
-   * @param {*} deployedCode optional, any cut option with a runtime hash found in this object is skipped.
+   * @param {*} currentDiamondCode optional, any cut option with a runtime hash found in this object is skipped.
    */
-  *readCutOptions(cuts, deployedCode = undefined) {
-    deployedCode = deployedCode ?? {};
+  *readCutOptions(cuts, currentDiamondCode = undefined) {
+    currentDiamondCode = currentDiamondCode ?? {};
 
     for (let co of cuts) {
       if (this.ignoreNames[co.name]) {
@@ -195,19 +195,6 @@ export class DiamondDeployer {
         continue;
       }
 
-      co.deployStatus = deployedCode[co.runtimeHash]
-        ? DeployStatus.Deployed
-        : DeployStatus.NotDeployed;
-
-      /* this is dangerous due to the way we decide which selectors should be deleted.
-      if (deployedCode[co.runtimeHash]) {
-        this.r.out(
-          `skipping ${co.name} matching code already deployed at @${
-            deployedCode[co.runtimeHash]
-          }`
-        );
-        continue;
-      }*/
       yield co;
     }
   }
@@ -240,7 +227,16 @@ export class DiamondDeployer {
     }
 
     const selectorActions = {};
-    const deployedCode = {}; // keccak(deployedCode) -> address
+    const currentDiamondCode = {}; // keccak(deployedCode) -> address
+
+    // if we have xxx get the runtime code hashes
+    for (const f of Object.values(this.options.facetsDeployed ?? [])) {
+        const code = await this.signer.provider.getCode(f.facetAddress);
+        if (code != "0x") {
+          const runtimeHash = ethers.utils.keccak256(ethers.utils.arrayify(code));
+          f.runtimeHash = runtimeHash;
+        }
+    }
 
     // For each facet we successfully deploy determine if each selector it
     // implements is being *added* or *replaced". We can't use the discovered
@@ -255,8 +251,8 @@ export class DiamondDeployer {
       for (const f of facets) {
         const code = await this.signer.provider.getCode(f.facetAddress);
         if (code != "0x") {
-          deployedCode[ethers.utils.keccak256(ethers.utils.arrayify(code))] =
-            f.facetAddress;
+          const runtimeHash = ethers.utils.keccak256(ethers.utils.arrayify(code));
+          currentDiamondCode[runtimeHash] = f.facetAddress;
         }
 
         for (const s of f.functionSelectors) {
@@ -275,7 +271,7 @@ export class DiamondDeployer {
     // single facet at a time.
     // Note: For a new deploy selectorActions will be empty
     const selectorDeletes = { ...selectorActions };
-    for (const co of this.readCutOptions(cuts, deployedCode)) {
+    for (const co of this.readCutOptions(cuts)) {
       // regardless of whether each co is deployed or not, if it is found then it will not be deleted.
       for (const s of co.selectors) {
         delete selectorDeletes[s];
@@ -300,29 +296,42 @@ export class DiamondDeployer {
       });
     }
 
-    for (const co of this.readCutOptions(cuts, deployedCode)) {
+    for (const co of this.readCutOptions(cuts)) {
       // note: we allow the DiamondCut implementation to be upgraded
-      if (co.deployStatus == DeployStatus.Deployed) {
-        this.r.out(
-          `skipping ${co.name} matching code already deployed at @${
-            deployedCode[co.runtimeHash]
-          }`
-        );
-        continue;
-      }
+
+
+      // If we have an entry in --facets-deployed AND it matches the build code
+      // in --diamond-deploy, then that is the code we want to cut in. And
+      // facets-deployed.json is telling us it is already on the chain - we
+      // don't want to deploy it again.  The key use case here is recovering a
+      // partial deploy without the expense of re-deploying all the facets.
+      let facetAddress = (
+        this.options.facetsDeployed?.[co.name]?.runtimeHash === co.runtimeHash
+      ) ? this.options.facetsDeployed[co.name].facetAddress : undefined;
+
+      // If we haven't got a previously deployed instance of the built code,
+      // check if the code currently found by the louper on the deployed diamond
+      // matches the runtime hash. Clearly, if this is a new deployment, there
+      // will be no match. If there is a match, and we also have an entry in
+      // facets-deployed then we are back to the replace case, but we can skip
+      // the facet deployment.
+      facetAddress = facetAddress ?? currentDiamondCode[co.runtimeHash];
 
       // never delegated
       co.removeSignatures("init(bytes)");
 
-      // cut contracts are always deployed by the deployer key. Note dry-run is accounted for in tryDeploy
-      const address = await this.tryDeploy(
-        this.signer,
-        co.iface,
-        co.bytecode,
-        co
-      );
-      if (isError(address)) continue;
-      co.address = address;
+      if (!facetAddress) {
+        // cut contracts are always deployed by the deployer key. Note dry-run is accounted for in tryDeploy
+        const result = await this.tryDeploy(
+          this.signer,
+          co.iface,
+          co.bytecode,
+          co
+        );
+        if (isError(result)) continue;
+        facetAddress = result.address;
+      }
+      co.address = facetAddress;
 
       if (co.name == this.options.diamondInitName) {
         if (!this.diamondInit) this.diamondInit = co;
@@ -415,16 +424,34 @@ export class DiamondDeployer {
     const ownerAddress = await ownerSigner.getAddress();
 
     if (!this.diamond.c) {
-      this.diamond.address = await this.tryDeploy(
-        // We always *deploy* the diamond with the deployment key
-        this.signer,
-        co.iface,
-        co.bytecode,
-        co,
-        // If the owner key is provided, it becomes the owner account, diamondCut must be executed with this account.
-        ownerAddress,
-        this.diamondCut.address
-      );
+
+      let diamondAddress = (
+        this.options.facetsDeployed?.[co.name]?.runtimeHash === co.runtimeHash
+      ) ? this.options.facetsDeployed[co.name].facetAddress : undefined;
+
+      if (!diamondAddress) {
+
+        // XXX: TODO: check the diamond. if it has the louper then we will be
+        // able to call facets() and we should have considered the diamond when
+        // we processed the cuts (in which case we would alread have
+        // this.diamond.c)
+        const result = await this.tryDeploy(
+          // We always *deploy* the diamond with the deployment key
+          this.signer,
+          co.iface,
+          co.bytecode,
+          co,
+          // If the owner key is provided, it becomes the owner account, diamondCut must be executed with this account.
+          ownerAddress,
+          this.diamondCut.address,
+          {gasLimit: this.options.diamondGasLimit}
+        );
+        if (isError(result))
+          return DeployResult.fromErr(result);
+
+        diamondAddress = result.address
+      }
+      this.diamond.address = diamondAddress;
 
       this.diamondCut.c = new ethers.Contract(
         this.diamond.address,
@@ -456,17 +483,26 @@ export class DiamondDeployer {
         msg: `diamond @${this.diamond.c.address} nothing to do or all up to date`,
       });
 
+    if (!this.options.commit) {
+      return new DeployResult({
+        status: 1,
+        msg: `${this.facetCuts.length} facets need updating`,
+      });
+    }
+
     const tx = await this.diamondCut.c.diamondCut(
       this.facetCuts,
       diamondInitAddr,
-      initCalldata ?? "0x"
+      initCalldata ?? "0x"// ,
+      // {gasLimit: this.options.diamondGasLimit}
+      //, {gasLimit: ethers.BigNumber.from(150000)}
     );
     const receipt = await tx.wait();
     if (!receipt.status)
       return DeployResult.fromFaiedReceipt(
         receipt,
         tx,
-        `Diamond upgrade failed: ${tx.hash}`
+        `diamondCut failed: ${tx.hash}`
       );
 
     return DeployResult.fromSuccess(
@@ -475,7 +511,7 @@ export class DiamondDeployer {
       receipt,
       `Diamond@${
         this.diamond.c?.address ?? this.diamond.address
-      }, upgrade ok: tx=${tx.hash}`
+      }, deploy ok: tx=${tx.hash}`
     );
   }
 
@@ -483,8 +519,8 @@ export class DiamondDeployer {
    * Attempt a deploy and return the result if successful. if an exception
    * occurs *catch* it and return it. errors are also accumulated internaly.
    *
-   * If operating in offline mode (no signer provided) the returned result is an
-   * unsigned transaction, otherwise it is the deployed address of the contract.
+   * If --commit is not set, the returned result is an unsigned transaction,
+   * otherwise it is the deployed address of the contract.
    *
    * @param {ethers.Interface} iface  {@link https://docs.ethers.org/v5/api/utils/abi/interface/#Interface}
    * @param {string} bytecode
@@ -494,7 +530,13 @@ export class DiamondDeployer {
    */
   async tryDeploy(signer, iface, bytecode, co, ...args) {
     try {
-      const overrides = {};
+      let overrides = {};
+
+      // see if we got one more args entry than are required by the constructor.
+      // If so, take the last value as overrides. ethers has a similar scheme.
+      if (args.length === iface.deploy.inputs.length + 1) {
+        overrides = {...overrides, ...args.pop()}
+      }
       if (
         this.options?.gaslimit ||
         this.options?.gasprice ||
@@ -525,14 +567,14 @@ export class DiamondDeployer {
       if (Object.keys(overrides).length > 0) args.push(overrides);
 
       // facets are not allowed constructor arguments
-      const deployer = this.options.dryRun ? deployContract : populateDeployTransaction;
+      const deployer = this.options.commit ? deployContract : populateDeployTransaction;
 
       const [address, tx, msg] = await deployer(
         {r: this.r, iface, bytecode, signer, co, nonce: overrides?.nonce ?? undefined}, ...args
         );
       this.r.out(msg);
       this.results.push({tx, msg, co});
-      return tx ?? address;
+      return {address, tx, msg};
     } catch (err) {
       console.log(`${err}`);
       this.errors.push([co, err]);
@@ -587,10 +629,16 @@ export async function populateDeployTransaction(opts, ...args) {
 
   const factory = new ethers.ContractFactory(iface, bytecode, signer);
 
-  let tx = factory.getDeployTransaction();
-  tx = await signer.populateTransaction(tx);
-
-  const to = ethers.utils.getContractAddress({ from: tx.from, nonce: tx.nonce });
+  let orig;
+  let tx;
+  let to;
+  tx = factory.getDeployTransaction(...args);
+  try {
+    tx = await signer.populateTransaction(tx);
+  } catch (err) {
+    throw err;
+  }
+  to = ethers.utils.getContractAddress({ from: tx.from, nonce: tx.nonce });
 
   return [
     to,
@@ -613,5 +661,5 @@ export async function deployContract(opts, ...args) {
   );
   await facet.deployed();
   const msg = `deployed facet ${co.name}@${facet.address}`;
-  return [facet.address, null, msg];
+  return [facet.address, facet.deployTransaction, msg];
 }

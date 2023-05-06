@@ -22,13 +22,11 @@ export async function deployDiamondUpgrade(program, options) {
   const opts = program.opts();
   const deploykey = resolveHardhatKey(opts.deploykey);
 
-  if (!opts.offline) {
-    if (!deploykey && !program.opts().url) {
-      r.out(
-        `unless operating in offline mode a deployment key and url is required`
-      );
-      process.exit(1);
-    }
+  if (!deploykey && !program.opts().url) {
+    r.out(
+      `a deployment key and url is required`
+    );
+    process.exit(1);
   }
   const signer = programConnect(program, false, deploykey);
 
@@ -59,10 +57,15 @@ export async function deployDiamondUpgrade(program, options) {
   const cuts = readJson(options.facets ?? "facets.json").map(
     (o) => new FacetCutOpts(o)
   );
+  if (options.facetsDeployed)
+    options.facetsDeployed = readJson(options.facetsDeployed);
+  else
+    options.facetsDeployed = {};
+
 
   const deployer = new DiamondDeployer(r, signer, readers, options);
 
-  const isOffline = () => !deploykey || !!opts.offline;
+  const isOffline = () => !deploykey ||!opts.commit;
 
   const exit = (msg, code = undefined) => {
     // if there are errors co-erce any code not > 0 (including undefined) to 1.
