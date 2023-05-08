@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { isFile, readHexKey } from "./fsutil.js";
 import { readKey } from "./readkey.js";
 import { resolveHardhatKey } from "./hhkeys.js";
-import { asL2Provider } from  "@eth-optimism/sdk";
+import { asL2Provider } from "@eth-optimism/sdk";
 
 export function programConnect(program, polling = false, key = null) {
   const url = program.opts().url;

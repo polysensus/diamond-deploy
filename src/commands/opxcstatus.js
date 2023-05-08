@@ -1,14 +1,14 @@
 /*
 Derived from https://github.com/ethereum-optimism/optimism-tutorial/tree/main/cross-dom-bridge-eth
 */
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
 import { Option } from "commander";
 
-import { urlConnect } from './connect.js';
+import { urlConnect } from "./connect.js";
 
-import { wei2Eth, wei2Gwei } from '../lib/ethunits.js';
+import { wei2Eth, wei2Gwei } from "../lib/ethunits.js";
 
-import { MessageStatus, CrossChainMessenger } from  "@eth-optimism/sdk";
+import { MessageStatus, CrossChainMessenger } from "@eth-optimism/sdk";
 
 const log = console.log;
 const out = console.log;
@@ -28,25 +28,30 @@ export function addOPXCStatus(program) {
     .option("--eth-fiat <fiat>", "cost in fiat currency for 1 ETH")
     .option("--fiat-symbol <symbol>", "currency symbol for fiat", "GBP")
     .option("--account <address>", "account to check the balance of after")
-    .option("--units <units>", "wei, gwei or ether, as per eters.parseUnits", "gwei")
+    .option(
+      "--units <units>",
+      "wei, gwei or ether, as per eters.parseUnits",
+      "gwei"
+    )
     .action((txhash, options) => opxcstatus(program, options, txhash));
 }
 
 export async function opxcstatus(program, options, txhash) {
-
   const fmtWei = (wei) => {
     const gwei = wei2Gwei(wei);
     if (!options.ethFiat) {
       return `${gwei} GWEI`;
     }
-    return `${gwei} GWEI (${wei2Eth(wei) * options.ethFiat} ${options.fiatSymbol})`;
-  }
+    return `${gwei} GWEI (${wei2Eth(wei) * options.ethFiat} ${
+      options.fiatSymbol
+    })`;
+  };
 
   const messenger = connectCrossChainMessenger(program, options);
 
-  const start = new Date()
+  const start = new Date();
 
-  out("Waiting for status to change to RELAYED")
+  out("Waiting for status to change to RELAYED");
   txhash = ethers.utils.hexlify(txhash);
   try {
     // XXX: this doesn't work, not sure why
@@ -57,16 +62,23 @@ export async function opxcstatus(program, options, txhash) {
     process.exit(1);
   }
 
-  out(`depositETH took ${(new Date()-start)/1000} seconds\n\n`)
+  out(`depositETH took ${(new Date() - start) / 1000} seconds\n\n`);
   if (options.account) {
-    const l1BalanceAfter = await messenger.l1Provider.getBalance(options.accounts);
-    const l2BalanceAfter = await messenger.l2Provider.getBalance(options.accounts);
-    out(`New Balances: On L1: ${fmtWei(l1BalanceAfter)}    On L2: ${fmtWei(l2BalanceAfter)}`);
+    const l1BalanceAfter = await messenger.l1Provider.getBalance(
+      options.accounts
+    );
+    const l2BalanceAfter = await messenger.l2Provider.getBalance(
+      options.accounts
+    );
+    out(
+      `New Balances: On L1: ${fmtWei(l1BalanceAfter)}    On L2: ${fmtWei(
+        l2BalanceAfter
+      )}`
+    );
   }
 }
 
 export function connectCrossChainMessenger(program, options) {
-
   const l1Url = options.l1Url;
   if (!l1Url) {
     out(`The --l1-url option must be provided`);
@@ -79,10 +91,10 @@ export function connectCrossChainMessenger(program, options) {
   }
 
   return new CrossChainMessenger({
-      l1ChainId: options.chainidL1,
-      l2ChainId: options.chainidL2,
-      l1SignerOrProvider: urlConnect(l1Url, {optimism: true, polling:true}),
-      l2SignerOrProvider: urlConnect(l2Url, {optimism: true, polling:true}),
-      bedrock: true
+    l1ChainId: options.chainidL1,
+    l2ChainId: options.chainidL2,
+    l1SignerOrProvider: urlConnect(l1Url, { optimism: true, polling: true }),
+    l2SignerOrProvider: urlConnect(l2Url, { optimism: true, polling: true }),
+    bedrock: true,
   });
 }

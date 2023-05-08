@@ -23,9 +23,7 @@ export async function deployNewDiamond(program, options) {
     options.diamondGasLimit = Number(options.diamondGasLimit);
 
   if (!deploykey && !program.opts().url) {
-    r.out(
-      `a deployment key and url is required`
-    );
+    r.out(`a deployment key and url is required`);
     process.exit(1);
   }
   const signer = programConnect(program, false, deploykey);
@@ -43,8 +41,7 @@ export async function deployNewDiamond(program, options) {
   );
   if (options.facetsDeployed)
     options.facetsDeployed = readJson(options.facetsDeployed);
-  else
-    options.facetsDeployed = {};
+  else options.facetsDeployed = {};
 
   const deployer = new DiamondDeployer(r, signer, readers, options);
 

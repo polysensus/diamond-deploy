@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 import * as dotenv from "dotenv";
-dotenv.config({path: process.env.DOTENV_FILE ?? '.env'});
+dotenv.config({ path: process.env.DOTENV_FILE ?? ".env" });
 
 // import {ethers} from 'ethers';
 // ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR);
@@ -19,8 +19,6 @@ import { addOPDeposit } from "./src/commands/opdeposit.js";
 import { addOPXCStatus } from "./src/commands/opxcstatus.js";
 import { addOPSend } from "./src/commands/opsend.js";
 import { addAccount } from "./src/commands/account.js";
-
-
 
 program.addOption(
   new Option(
@@ -73,7 +71,9 @@ program
   // "UNPREDICTABLE_GAS_LIMIT" due to the revert
   .option(
     "--diamond-gas-limit <number>",
-    "set this when running without --commit, the diamond will revert unless the facets are actually deployed", 3500000)
+    "set this when running without --commit, the diamond will revert unless the facets are actually deployed",
+    3500000
+  )
   .option("--legacy", "pre eip 1559 gas estimation")
   .option("--gasprice <number>", "gas price in gwei for deployment.")
   .option(
@@ -118,7 +118,7 @@ program
   )
   .option(
     "--facets-deployed <filename>",
-`a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
+    `a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
   )
   .action((options) => deployDiamondUpgrade(program, options));
 
@@ -140,7 +140,9 @@ program
   // "UNPREDICTABLE_GAS_LIMIT" due to the revert
   .option(
     "--diamond-gas-limit <number>",
-    "set this when running without --commit, the diamond will revert unless the facets are actually deployed", 3500000)
+    "set this when running without --commit, the diamond will revert unless the facets are actually deployed",
+    3500000
+  )
 
   .option(
     "--replace",
@@ -176,7 +178,7 @@ program
   )
   .option(
     "--facets-deployed <filename>",
-`a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
+    `a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
   )
   .action((options) => deployNewDiamond(program, options));
 

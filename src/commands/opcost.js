@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
 import { Option } from "commander";
 import { urlConnect } from "./connect.js";
 import { resolveHardhatKey } from "./hhkeys.js";
@@ -10,7 +10,7 @@ import { FileReader } from "../lib/deployment/filefinder/reader.js";
 import { Reporter } from "../lib/reporter.js";
 import { FacetCutOpts } from "../lib/deployment/diamond/facet.js";
 
-import { wei2Eth, wei2Gwei } from '../lib/ethunits.js';
+import { wei2Eth, wei2Gwei } from "../lib/ethunits.js";
 
 const readers = {
   FileReader: new FileReader(),
@@ -49,14 +49,15 @@ async function opcost(program, options) {
   const deploykey = resolveHardhatKey(opts.deploykey);
 
   if (!deploykey && !program.opts().url) {
-    r.out(
-      `a deployment key and url is required to estimate costs`
-    );
+    r.out(`a deployment key and url is required to estimate costs`);
     process.exit(1);
   }
 
-  const signer = urlConnect(
-    program.opts().url, {key:deploykey, polling: true, optimism: true});
+  const signer = urlConnect(program.opts().url, {
+    key: deploykey,
+    polling: true,
+    optimism: true,
+  });
 
   // opts.commit = true; // forces deploy
 
@@ -68,30 +69,31 @@ async function opcost(program, options) {
   await deployer.processERC2535Cuts(cuts);
   await deployer.processCuts(cuts);
 
-
   const displayWei = (wei) => {
     let display = `${wei2Gwei(wei).toFixed(2)} GWEI`;
     if (ethFiat)
-      display = `${display}, ${(wei2Eth(wei) * ethFiat).toFixed(4)} ${options.fiatSymbol}`;
+      display = `${display}, ${(wei2Eth(wei) * ethFiat).toFixed(4)} ${
+        options.fiatSymbol
+      }`;
     return display;
-  }
-  const displayGas = x => x.toString().padStart(10, " ")
+  };
+  const displayGas = (x) => x.toString().padStart(10, " ");
 
   // deployer.report();
   const provider = signer.provider;
   let diamondCost = ethers.BigNumber.from(0);
-  for (const {tx, co} of deployer.results) {
-    const totalCost = await provider.estimateTotalGasCost(tx)
-    const l1Cost = await provider.estimateL1GasCost(tx)
-    const l2Cost = await provider.estimateL2GasCost(tx)
-    const l1Gas = await provider.estimateL1Gas(tx)
-    r.out(`Estimates: ${co.name}`)
-    r.out(`   Total gas cost: ${displayWei(totalCost)}`)
-    r.out(`      L1 gas cost: ${displayWei(l1Cost)}`)
-    r.out(`      L2 gas cost: ${displayWei(l2Cost)}`)
-    r.out(`   L1 Gas        : ${displayGas(l1Gas)}`)
+  for (const { tx, co } of deployer.results) {
+    const totalCost = await provider.estimateTotalGasCost(tx);
+    const l1Cost = await provider.estimateL1GasCost(tx);
+    const l2Cost = await provider.estimateL2GasCost(tx);
+    const l1Gas = await provider.estimateL1Gas(tx);
+    r.out(`Estimates: ${co.name}`);
+    r.out(`   Total gas cost: ${displayWei(totalCost)}`);
+    r.out(`      L1 gas cost: ${displayWei(l1Cost)}`);
+    r.out(`      L2 gas cost: ${displayWei(l2Cost)}`);
+    r.out(`   L1 Gas        : ${displayGas(l1Gas)}`);
     diamondCost = diamondCost.add(totalCost);
   }
-    r.out(`    Diamond Cost : ${displayWei(diamondCost)}`)
+  r.out(`    Diamond Cost : ${displayWei(diamondCost)}`);
   process.exit(deployer.reporterrs());
 }
