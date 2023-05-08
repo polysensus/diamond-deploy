@@ -53,13 +53,9 @@ jobs:
 
       - name: publish npm package
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_DIAMOND_DEPLOY_PUBLISH }}
+        # if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
-          # TODO: public npm
-          echo "@polysensus:registry=https://npm.pkg.github.com" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc
-
           # github has scale issues when there are a large (> 20 ) npm packages in
           # a repo, so force for fixes seems like the right thing for now.
           FORCE=""
@@ -68,15 +64,15 @@ jobs:
           fi
           npm publish $FORCE
 
-      - name: package cleanup
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: actions/delete-package-versions@v4
-        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
-        with:
-          package-name: "diamond-deploy"
-          package-type: "npm"
-          min-versions-to-keep: 3
+      #- name: package cleanup
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  uses: actions/delete-package-versions@v4
+      #  if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
+      #  with:
+      #    package-name: "diamond-deploy"
+      #    package-type: "npm"
+      #    min-versions-to-keep: 3
 
       # this didn't work, despite looking like jest/junit format the reporter
       # crashed when looking at the time property
