@@ -10,13 +10,6 @@ jobs:
     name: ci build & test
     runs-on: ubuntu-latest
     steps:
-      - name: Authenticate as the cicd github app
-        id: cicd-app-authenticate
-        uses: polysensus/cicd-app-token@main
-        with:
-          APP_PEM: ${{ secrets.CICD_APP_PEM }}
-          APP_ID: ${{ secrets.CICD_APP_ID }}
-
       - name: Checkout the diamond-deploy repository
         uses: actions/checkout@v3
         with:
@@ -27,20 +20,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.15.0
+          scope: "@polysensus"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Install go-tusk and go-task
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/bin
-
-          # go-task
-          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- \
-            -d -b $GITHUB_WORKSPACE/bin
-
-          # go-tusk
-          curl -sL https://git.io/tusk | bash -s -- -b $GITHUB_WORKSPACE/bin latest
-          chmod a+x $GITHUB_WORKSPACE/bin/tusk
-          echo $GITHUB_WORKSPACE/bin >> $GITHUB_PATH
 
       - name: build
         run: |
@@ -57,6 +38,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_DIAMOND_DEPLOY_PUBLISH }}
         # if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
+
+          npm config list
+
           # github has scale issues when there are a large (> 20 ) npm packages in
           # a repo, so force for fixes seems like the right thing for now.
           FORCE=""
