@@ -27,6 +27,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.15.0
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install go-tusk and go-task
         run: |
