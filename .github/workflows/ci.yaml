@@ -36,7 +36,7 @@ jobs:
       - name: publish npm package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_DIAMOND_DEPLOY_PUBLISH }}
-        # if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
+        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
         run: |
 
           npm config list
@@ -48,16 +48,6 @@ jobs:
             export FORCE=--force
           fi
           npm publish $FORCE
-
-      #- name: package cleanup
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #  uses: actions/delete-package-versions@v4
-      #  if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
-      #  with:
-      #    package-name: "diamond-deploy"
-      #    package-type: "npm"
-      #    min-versions-to-keep: 3
 
       # this didn't work, despite looking like jest/junit format the reporter
       # crashed when looking at the time property
