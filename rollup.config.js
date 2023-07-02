@@ -11,7 +11,7 @@ export default [
       inlineDynamicImports: true,
       name: pkg.name,
       file: pkg.deploycli,
-      format: "cjs",
+      format: "es",
       //       banner: `
       // var xcrypto = require('crypto');
       // global.crypto = xcrypto;

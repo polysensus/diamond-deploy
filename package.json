@@ -1,12 +1,12 @@
 {
   "name": "@polysensus/diamond-deploy",
   "type": "module",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "deployment library and tool for ERC 2535 diamond standard",
   "main": "dist/diamond-deploy.cjs",
   "module": "dist/diamond-deploy.esm.js",
   "browser": "dist/diamond-deploy.umd.js",
-  "deploycli": "dist/deploycli.cjs",
+  "deploycli": "dist/deploycli.esm.js",
   "bin": {
     "diamond-deploy": "dist/deploycli.cjs"
   },
