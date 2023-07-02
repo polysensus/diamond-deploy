@@ -4,6 +4,30 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "op-send-xxx-from-chaintrap-arenastate-not-tested-yet",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/cli.js",
+      "envFile": "${workspaceFolder}/.env.op-eth",
+      "args": [
+        "op-send",
+        "--eth-fiat",
+        "1514.67",
+        "--adjust-for-costs",
+        "--margin-percent",
+        "0",
+        "--commit",
+        "${workspaceFolder}/.local/dev/wallets/ann-goerli.key",
+        "0xd5A03137D5a03162b9C82f66934440655E4C41Bf",
+        "0.001"
+      ]
+    },
+
+
     {
       "type": "node",
       "request": "launch",
