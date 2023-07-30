@@ -13,8 +13,8 @@
       "cwd": "${workspaceFolder:chaintrap-contracts}",
       "args": [
         "select",
-		"--show-collisions",
-		// "--select-excluded",
+        "--show-collisions",
+        // "--select-excluded",
         "-I",
         "facet",
         "-i",

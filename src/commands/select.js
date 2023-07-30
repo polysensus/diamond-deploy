@@ -33,9 +33,15 @@ export function addSelector(program) {
 produce output that can be consumed by deploy-new and deploy`
     )
     .option("-v, --verbose [count]", "more verbose reporting")
-    .option("-C, --show-collisions", "show collisions without attempting to resolve them")
-    .option("-E, --select-excluded", `the output should be the selections to
-*exclude*. Use this to generate the input file for any command that supports --exclude`)
+    .option(
+      "-C, --show-collisions",
+      "show collisions without attempting to resolve them"
+    )
+    .option(
+      "-E, --select-excluded",
+      `the output should be the selections to
+*exclude*. Use this to generate the input file for any command that supports --exclude`
+    )
     .option("-i, --directories <includedirs...>")
     .option(
       "-I, --includeclasses <classes...>",
@@ -78,14 +84,16 @@ export function select(program, options) {
 
   const collisions = [...found.resolve()];
   if (options.showCollisions) {
-    const rows = []
+    const rows = [];
     for (const col of collisions)
-      for (const row of col)
-        rows.push(facetRowObject(row));
-    r.out(JSON.stringify(rows, null, '  '));
+      for (const row of col) rows.push(facetRowObject(row));
+    r.out(JSON.stringify(rows, null, "  "));
     process.exit(0);
   }
-  const select = (options.select && options.select.length !== 0) ? options.select : (options.names || []);
+  const select =
+    options.select && options.select.length !== 0
+      ? options.select
+      : options.names || [];
 
   const rows = [];
   for (const conflictedRows of collisions) {
@@ -119,16 +127,15 @@ export function select(program, options) {
       rows.push(selected);
       continue;
     }
-    if (conflictedRows.length <= 1)
-      continue;
-   
+    if (conflictedRows.length <= 1) continue;
+
     // when generating exclusions which resolve the conflicts, add the rows that are *not* selected.
-    for (let i=0; i < conflictedRows.length; i++) {
-      if (i===iSelected) continue;
+    for (let i = 0; i < conflictedRows.length; i++) {
+      if (i === iSelected) continue;
       rows.push(facetRowObject(conflictedRows[i]));
     }
   }
 
-  r.out(JSON.stringify(rows, null, '  '));
+  r.out(JSON.stringify(rows, null, "  "));
   process.exit(0);
 }
