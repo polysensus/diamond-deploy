@@ -1,4 +1,5 @@
 import { GlobFinder } from "../../filefinder/finder.js";
+import { FileMatcher } from "../../filefinder/matcher.js";
 
 export class FoundryFileFinder extends GlobFinder {
   constructor(outdir, reporter, reader, matcher) {

@@ -7,6 +7,42 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "select (selectors)",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "cwd": "${workspaceFolder:chaintrap-contracts}",
+      "args": [
+        "select",
+		"--show-collisions",
+		// "--select-excluded",
+        "-I",
+        "facet",
+        "-i",
+        "build/forge/out"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "list selectors",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+        "list",
+        "-i",
+        "${workspaceFolder:chaintrap-contracts}/build/forge/out",
+        "-I",
+        "facet",
+        "-n",
+        "Diamond",
+        "DiamondNew"
+      ]
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
       "name": "op-send-xxx-from-chaintrap-arenastate-not-tested-yet",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/cli.js",

@@ -8,11 +8,12 @@ dotenv.config({ path: process.env.DOTENV_FILE ?? ".env" });
 
 import { program, Option } from "commander";
 
-import { deployNewDiamond } from "./src/commands/deploy.js";
-import { deployDiamondUpgrade } from "./src/commands/upgrade.js";
-import { diamondFromAccountNonce } from "./src/commands/diamondfromaccount.js";
-import { listSelectors } from "./src/commands/list.js";
-import { pendingTransactions } from "./src/commands/pending.js";
+import { addDeployNewDiamond } from "./src/commands/deploy.js";
+import { addDeployDiamondUpgrade } from "./src/commands/upgrade.js";
+import { addDiamondFromAccountNonce } from "./src/commands/diamondfromaccount.js";
+import { addListSelectors } from "./src/commands/list.js";
+import { addSelector } from "./src/commands/select.js";
+import { addPendingTransactions } from "./src/commands/pending.js";
 
 import { addOPCost } from "./src/commands/opcost.js";
 import { addOPDeposit } from "./src/commands/opdeposit.js";
@@ -34,19 +35,6 @@ program.addOption(
 );
 
 //---
-program
-  .command("find")
-  .description(
-    `attempt to find a diamond implementing contract for an EOA. Search from the last nonce back by default or the specified one otherwise.`
-  )
-  .enablePositionalOptions()
-  .combineFlagAndOptionalValue(false)
-  .option("-v, --verbose [count]", "more verbose reporting")
-  .option(
-    "-n, --diamond-nonce <nonce>",
-    "check addresses derived from nonces on or before this (by default all are checked if --diamond-address is not set"
-  )
-  .action((options) => diamondFromAccountNonce(program, options));
 
 //---
 addOPCost(program);
@@ -56,164 +44,11 @@ addOPSend(program);
 addAccount(program);
 
 //---
-program
-  .command("diamond-up")
-  .description(
-    "upgrade an existing diamond proxy with new or updated facets. WARNING: this command REMOVES any selectors not present in the --facet file"
-  )
-  .enablePositionalOptions()
-  .combineFlagAndOptionalValue(false)
-  .option("-n, --dry-run")
-  .option("-v, --verbose [count]", "more verbose reporting")
-  .option("--ignore-names <names...>")
-  .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
-  // The diamond contract reverts if the facets have not been deployed, and this causes
-  // "UNPREDICTABLE_GAS_LIMIT" due to the revert
-  .option(
-    "--diamond-gas-limit <number>",
-    "set this when running without --commit, the diamond will revert unless the facets are actually deployed",
-    3500000
-  )
-  .option("--legacy", "pre eip 1559 gas estimation")
-  .option("--gasprice <number>", "gas price in gwei for deployment.")
-  .option(
-    "--replace",
-    "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)"
-  )
-  .option(
-    "--diamond-address <address>",
-    "the address of the diamond to upgrade. derived from deployer key if not provided"
-  )
-  .option(
-    "--diamond-nonce <nonce>",
-    "check addresses derived from nonces on or before this (by default all are checked if --diamond-address is not set"
-  )
-  .option("--diamond-owner-key <name>", "the owner account key")
-  .option("--diamond-name <name>", "name of diamond contract", "Diamond")
-  .option(
-    "--diamond-loupe-name <name>",
-    "name of diamond loupe facet contract",
-    "DiamondLoupeFacet"
-  )
-  .option(
-    "--diamond-init-name <name>",
-    "name of diamond init contract",
-    "DiamondNew"
-  )
-  .option(
-    "--diamond-init-args <args>",
-    "json formatted args for the init contract name",
-    // TODO: this default is chaintrap specific, will be just undefined and
-    // default to no init args
-    '[{"typeURIs":[]}]'
-  )
-  .option(
-    "--diamond-cut-name <name>",
-    "name of diamond contract",
-    "DiamondCutFacet"
-  )
-  .option(
-    "-f, --facets <facets>",
-    "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
-  )
-  .option(
-    "--facets-deployed <filename>",
-    `a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
-  )
-  .action((options) => deployDiamondUpgrade(program, options));
-
-//---
-program
-  .command("diamond-new")
-  .description(
-    `deploy a new diamond, this deploys a new proxy contract with empty state and cuts in the facets`
-  )
-  .enablePositionalOptions()
-  .combineFlagAndOptionalValue(false)
-  .option("-v, --verbose [count]", "more verbose reporting")
-  .option("-c, --commit")
-  .option("--ignore-names <names...>")
-  .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
-  .option("--legacy", "pre eip 1559 gas estimation")
-  .option("--gasprice <number>", "gas price in gwei for deployment.")
-  // The diamond contract reverts if the facets have not been deployed, and this causes
-  // "UNPREDICTABLE_GAS_LIMIT" due to the revert
-  .option(
-    "--diamond-gas-limit <number>",
-    "set this when running without --commit, the diamond will revert unless the facets are actually deployed",
-    3500000
-  )
-
-  .option(
-    "--replace",
-    "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)"
-  )
-  .option("--diamond-owner-key <name>", "the owner account key")
-  .option("--diamond-name <name>", "name of diamond contract", "Diamond")
-  .option(
-    "--diamond-loupe-name <name>",
-    "name of diamond loupe facet contract",
-    "DiamondLoupeFacet"
-  )
-  .option(
-    "--diamond-init-name <name>",
-    "name of diamond contract",
-    "DiamondNew"
-  )
-  .option(
-    "--diamond-init-args <args>",
-    "json formatted args for the init contract name",
-    // TODO: this default is chaintrap specific, will be just undefined and
-    // default to no init args
-    '[{"typeURIs":[]}]'
-  )
-  .option(
-    "--diamond-cut-name <name>",
-    "name of diamond contract",
-    "DiamondCutFacet"
-  )
-  .option(
-    "-f, --facets <facets>",
-    "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
-  )
-  .option(
-    "--facets-deployed <filename>",
-    `a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
-  )
-  .action((options) => deployNewDiamond(program, options));
-
-program
-  .command("pending")
-  .option("-a --account <address>", "the owner account address")
-  .option("-k --key <key>", "the owner account key (prioritised over address)")
-  .action((options) => {
-    pendingTransactions(program, options);
-  });
-
-program
-  .command("list")
-  .summary("list the selectors for each discovered abi file")
-  .description(
-    `list the contract and libary selectors. Use --format json to
-produce output that can be consumed by deploy-new and deploy`
-  )
-  .option("-v, --verbose [count]", "more verbose reporting")
-  .option("-i, --directories <includedirs...>")
-  .option(
-    "-I, --includeclasses <classes...>",
-    "facet is the only supported class for now"
-  )
-  .option("-n, --names <names...>")
-  .option(
-    "-F, --format <format>",
-    "'json' | 'info' | 'table'. defaults to 'table'"
-  )
-  .option("-a, --absoloute", "output absoloute filenames")
-  .option("-c, --collisions-only", "only output collisions (if there are any)")
-  .option(
-    "-x, --exclude <exclude>",
-    "a file listing excluded selector implementations. use to reconcile or remove collisions. The format is the same as produced whenwhen -F json and --collisions-only are set"
-  )
-  .action((options) => listSelectors(program, options));
+addDiamondFromAccountNonce(program);
+addDeployNewDiamond(program);
+addDeployDiamondUpgrade(program);
+addPendingTransactions(program);
+addListSelectors(program);
+addSelector(program);
 
 program.parse();

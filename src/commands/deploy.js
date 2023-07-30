@@ -13,6 +13,67 @@ const readers = {
   FileReader: new FileReader(),
 };
 
+export function addDeployNewDiamond(program) {
+  program
+    .command("diamond-new")
+    .description(
+      `deploy a new diamond, this deploys a new proxy contract with empty state and cuts in the facets`
+    )
+    .enablePositionalOptions()
+    .combineFlagAndOptionalValue(false)
+    .option("-v, --verbose [count]", "more verbose reporting")
+    .option("-c, --commit")
+    .option("--ignore-names <names...>")
+    .option("-g, --gaslimit <number>", "gaslimit to use for deployment")
+    .option("--legacy", "pre eip 1559 gas estimation")
+    .option("--gasprice <number>", "gas price in gwei for deployment.")
+    // The diamond contract reverts if the facets have not been deployed, and this causes
+    // "UNPREDICTABLE_GAS_LIMIT" due to the revert
+    .option(
+      "--diamond-gas-limit <number>",
+      "set this when running without --commit, the diamond will revert unless the facets are actually deployed",
+      3500000
+    )
+
+    .option(
+      "--replace",
+      "check pending and current nonce and replace current if they are different (work around stuck transactions due to price)"
+    )
+    .option("--diamond-owner-key <name>", "the owner account key")
+    .option("--diamond-name <name>", "name of diamond contract", "Diamond")
+    .option(
+      "--diamond-loupe-name <name>",
+      "name of diamond loupe facet contract",
+      "DiamondLoupeFacet"
+    )
+    .option(
+      "--diamond-init-name <name>",
+      "name of diamond contract",
+      "DiamondNew"
+    )
+    .option(
+      "--diamond-init-args <args>",
+      "json formatted args for the init contract name",
+      // TODO: this default is chaintrap specific, will be just undefined and
+      // default to no init args
+      '[{"typeURIs":[]}]'
+    )
+    .option(
+      "--diamond-cut-name <name>",
+      "name of diamond contract",
+      "DiamondCutFacet"
+    )
+    .option(
+      "-f, --facets <facets>",
+      "a file describing the named facets to add. must include at least Diamond, DiamondLoupeFacet and OwnershipFacet"
+    )
+    .option(
+      "--facets-deployed <filename>",
+      `a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
+    )
+    .action((options) => deployNewDiamond(program, options));
+}
+
 export async function deployNewDiamond(program, options) {
   const r = Reporter.fromVerbosity(options.verbose);
 

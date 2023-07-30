@@ -2,7 +2,10 @@ import { readJson } from "./fsutil.js";
 
 import { FoundryFileLoader } from "../lib/deployment/loadersfs/foundry/loader.js";
 import { Reporter } from "../lib/reporter.js";
-import { stringifyRows } from "../lib/deployment/diamond/facet.js";
+import {
+  facetRowObject,
+  stringifyRows,
+} from "../lib/deployment/diamond/facet.js";
 
 function readExclusions(filename, r) {
   if (!filename) return {};
@@ -16,6 +19,33 @@ function readExclusions(filename, r) {
     exclusions[key] = exc;
   }
   return exclusions;
+}
+
+export function addListSelectors(program) {
+  program
+    .command("list")
+    .summary("list the selectors for each discovered abi file")
+    .description(
+      `list the contract and libary selectors. Use --format json to
+produce output that can be consumed by deploy-new and deploy`
+    )
+    .option("-v, --verbose [count]", "more verbose reporting")
+    .option("-i, --directories <includedirs...>")
+    .option(
+      "-I, --includeclasses <classes...>",
+      "facet is the only supported class for now"
+    )
+    .option("-n, --names <names...>")
+    .option(
+      "-F, --format <format>",
+      "'json' | 'info' | 'table'. defaults to 'table'"
+    )
+    .option("-a, --absoloute", "output absoloute filenames")
+    .option(
+      "-x, --exclude <exclude>",
+      "a file listing excluded selector implementations. use to reconcile or remove collisions. The format is the same as produced whenwhen -F json and --collisions-only are set"
+    )
+    .action((options) => listSelectors(program, options));
 }
 
 export function listSelectors(program, options) {
@@ -49,24 +79,22 @@ export function listSelectors(program, options) {
     );
   };
 
-  if (!options.collisionsOnly) {
-    if (options.format == "json") {
-      r.out(found.toJson());
+  if (options.format == "json") {
+    r.out(found.toJson());
+  }
+
+  if (options.format == "info") {
+    for (const co of found.toStructuredLines(options.absoloute)) {
+      r.out(co.join("\n"));
     }
 
-    if (options.format == "info") {
-      for (const co of found.toStructuredLines(options.absoloute)) {
-        r.out(co.join("\n"));
-      }
+    return;
+  }
 
-      return;
-    }
-
-    if (options.format !== "json" && options.format !== "info") {
-      for (const rows of found.toLines(options.absoloute)) {
-        if (!rows.length) continue;
-        rowOut(rows);
-      }
+  if (options.format !== "json" && options.format !== "info") {
+    for (const rows of found.toLines(options.absoloute)) {
+      if (!rows.length) continue;
+      rowOut(rows);
     }
   }
   for (const [co, sel, sig] of excluded) {
@@ -74,7 +102,7 @@ export function listSelectors(program, options) {
   }
 
   if (collisions.length != 0) {
-    !options.collisionsOnly && r.out("*** collisions ***");
+    r.out("*** collisions ***");
     for (const rows of collisions) {
       rowOut(rows);
     }

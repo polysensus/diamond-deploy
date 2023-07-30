@@ -7,6 +7,22 @@ import { deriveContractAddress } from "../lib/deployment/deriveaddress.js";
 
 import { Reporter } from "../lib/reporter.js";
 
+export function addDiamondFromAccountNonce(program) {
+  program
+    .command("find")
+    .description(
+      `attempt to find a diamond implementing contract for an EOA. Search from the last nonce back by default or the specified one otherwise.`
+    )
+    .enablePositionalOptions()
+    .combineFlagAndOptionalValue(false)
+    .option("-v, --verbose [count]", "more verbose reporting")
+    .option(
+      "-n, --diamond-nonce <nonce>",
+      "check addresses derived from nonces on or before this (by default all are checked if --diamond-address is not set"
+    )
+    .action((options) => diamondFromAccountNonce(program, options));
+}
+
 export async function diamondFromAccountNonce(program, options) {
   const r = Reporter.fromVerbosity(options.verbose);
 

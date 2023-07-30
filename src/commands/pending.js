@@ -2,6 +2,15 @@ import { programConnect, resolveSigner } from "./connect.js";
 import { resolveHardhatKey } from "./hhkeys.js";
 import { Reporter } from "../lib/reporter.js";
 
+export function addPendingTransactions(program) {
+  program
+    .command("pending")
+    .option("-a --account <address>", "the owner account address")
+    .action((options) => {
+      pendingTransactions(program, options);
+    });
+}
+
 export async function pendingTransactions(program, options) {
   const r = Reporter.fromVerbosity(options.verbose);
 
