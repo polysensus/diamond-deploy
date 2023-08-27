@@ -228,6 +228,7 @@ export class DiamondDeployer {
 
     const selectorActions = {};
     const currentDiamondCode = {}; // keccak(deployedCode) -> address
+    const deployedFacets = {};
 
     // if we have xxx get the runtime code hashes
     for (const f of Object.values(this.options.facetsDeployed ?? [])) {
@@ -332,6 +333,7 @@ export class DiamondDeployer {
         );
         if (isError(result)) continue;
         facetAddress = result.address;
+        deployedFacets[co.name] = {facetAddress};
       }
       co.address = facetAddress;
 
@@ -396,6 +398,7 @@ export class DiamondDeployer {
         }
       }
     }
+    return deployedFacets;
   }
 
   /**
@@ -419,6 +422,29 @@ export class DiamondDeployer {
       throw new Error(
         `unable to deploy, errors or missing a signer or missing contracts for essential EIP 2535 behaviour`
       );
+
+    /*
+    // gather all the addresses referenced by the cuts
+    const cutAddresses = {}
+    for (let [k, v] of Object.entries(this.facetCuts))
+      cutAddresses[v.facetAddress] = true
+
+    // remove all the addresses we know have been deployed
+    for (let [k, v] of Object.entries(this.options.facetsDeployed))
+      delete cutAddresses[v.facetAddress];*/
+
+    if (this.facetCuts.length === 0)
+      return new DeployResult({
+        status: 0,
+        msg: `diamond @${this.diamond.c.address} nothing to do or all up to date`,
+      });
+
+    if (!this.options.commit) {
+      return new DeployResult({
+        status: 0,
+        msg: `${this.facetCuts.length} facets need updating`,
+      });
+    }
 
     var co = this.diamond;
 
@@ -444,8 +470,7 @@ export class DiamondDeployer {
           co,
           // If the owner key is provided, it becomes the owner account, diamondCut must be executed with this account.
           ownerAddress,
-          this.diamondCut.address,
-          { gasLimit: this.options.diamondGasLimit }
+          this.diamondCut.address
         );
         if (isError(result)) return DeployResult.fromErr(result);
 
@@ -461,7 +486,7 @@ export class DiamondDeployer {
     }
     if (!this.diamondCut.c) {
       this.diamondCut.c = new ethers.Contract(
-        this.diamond.c.address,
+        this.diamond.address,
         this.diamondCut.iface,
         ownerSigner
       );
@@ -477,26 +502,20 @@ export class DiamondDeployer {
         initCalldata = this.diamondInit.iface.encodeFunctionData("init", args);
       }
     }
-    if (this.facetCuts.length === 0)
-      return new DeployResult({
-        status: 0,
-        msg: `diamond @${this.diamond.c.address} nothing to do or all up to date`,
-      });
 
-    if (!this.options.commit) {
-      return new DeployResult({
-        status: 1,
-        msg: `${this.facetCuts.length} facets need updating`,
-      });
-    }
+    let overrides = {}
+    if (this.options.cutterGasLimit)
+      overrides.gasLimit = Number.parseInt(this.options?.cutterGasLimit);
+    overrides = await this.txOverrides(overrides);
 
     const tx = await this.diamondCut.c.diamondCut(
       this.facetCuts,
       diamondInitAddr,
-      initCalldata ?? "0x" // ,
-      // {gasLimit: this.options.diamondGasLimit}
-      //, {gasLimit: ethers.BigNumber.from(150000)}
+      initCalldata ?? "0x",
+      overrides
     );
+    if (this.options.verbose)
+      console.log(tx)
     const receipt = await tx.wait();
     if (!receipt.status)
       return DeployResult.fromFaiedReceipt(
@@ -513,6 +532,34 @@ export class DiamondDeployer {
         this.diamond.c?.address ?? this.diamond.address
       }, deploy ok: tx=${tx.hash}`
     );
+  }
+
+  async txOverrides(overrides, signer) {
+
+    if (!overrides?.gasLimit && this.options?.gaslimit)
+      overrides.gasLimit = Number.parseInt(this.options?.gaslimit);
+    if (!overrides.gasPrice && this.options?.gasprice)
+      overrides.gasPrice = ethers.utils.parseUnits(
+        this.options?.gasprice,
+        "gwei"
+      ).toNumber();
+    if (typeof overrides?.type !== 'undefined' && this.options?.legacy) overrides.type = 0;
+
+    if (this.options?.replace && signer) {
+      const pendingNonce = await signer.getTransactionCount("pending");
+      const current = await signer.getTransactionCount();
+      if (pendingNonce != current) {
+        this.r.out(
+          `${
+            pendingNonce - current
+          } pending transaction, replacing ${current}`
+        );
+        overrides.nonce = current;
+      }
+    }
+    if (this.options.verbose)
+      console.log(overrides);
+    return overrides;
   }
 
   /**
@@ -537,34 +584,10 @@ export class DiamondDeployer {
       if (args.length === iface.deploy.inputs.length + 1) {
         overrides = { ...overrides, ...args.pop() };
       }
-      if (
-        this.options?.gaslimit ||
-        this.options?.gasprice ||
-        this.options?.legacy
-      ) {
-        if (this.options?.gaslimit)
-          overrides.gasLimit = Number.parseInt(this.options?.gaslimit);
-        if (this.options?.gasprice)
-          overrides.gasPrice = ethers.utils.parseUnits(
-            this.options?.gasprice,
-            "gwei"
-          );
-        if (this.options?.legacy) overrides.type = 0;
-      }
+      overrides = await this.txOverrides(overrides);
 
-      if (this.options?.replace) {
-        const pendingNonce = await signer.getTransactionCount("pending");
-        const current = await signer.getTransactionCount();
-        if (pendingNonce != current) {
-          this.r.out(
-            `${
-              pendingNonce - current
-            } pending transaction, replacing ${current}`
-          );
-          overrides.nonce = current;
-        }
-      }
-      if (Object.keys(overrides).length > 0) args.push(overrides);
+      if (Object.keys(overrides).length > 0)
+        args.push(overrides);
 
       // facets are not allowed constructor arguments
       const deployer = this.options.commit
@@ -580,7 +603,7 @@ export class DiamondDeployer {
           co,
           nonce: overrides?.nonce ?? undefined,
         },
-        ...args
+        ... args
       );
       this.r.out(msg);
       this.results.push({ tx, msg, co });
@@ -662,11 +685,11 @@ export async function deployContract(opts, ...args) {
 
   const factory = new ethers.ContractFactory(iface, bytecode, signer);
 
-  const facet = await factory.deploy(...args);
+  const result = await factory.deploy(...args);
   r.info(
-    `from: ${facet.deployTransaction.from} contract@${facet.address} deploy tx: ${facet.deployTransaction.hash}`
+    `from: ${result.deployTransaction.from} contract@${result.address} deploy tx: ${result.deployTransaction.hash}`
   );
-  await facet.deployed();
-  const msg = `deployed facet ${co.name}@${facet.address}`;
-  return [facet.address, facet.deployTransaction, msg];
+  await result.deployed();
+  const msg = `deployed ${co.name}@${result.address}`;
+  return [result.address, result.deployTransaction, msg];
 }

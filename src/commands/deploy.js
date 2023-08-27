@@ -1,13 +1,12 @@
 import { programConnect, resolveSigner } from "./connect.js";
 import { resolveHardhatKey } from "./hhkeys.js";
-import { readJson } from "./fsutil.js";
+import { readJson, writeJson } from "./fsutil.js";
 
 import { DiamondDeployer } from "../lib/deployment/diamond/deploy.js";
 
 import { FileReader } from "../lib/deployment/filefinder/reader.js";
 import { Reporter } from "../lib/reporter.js";
 import { FacetCutOpts } from "../lib/deployment/diamond/facet.js";
-import { ethers } from "ethers";
 
 const readers = {
   FileReader: new FileReader(),
@@ -30,9 +29,9 @@ export function addDeployNewDiamond(program) {
     // The diamond contract reverts if the facets have not been deployed, and this causes
     // "UNPREDICTABLE_GAS_LIMIT" due to the revert
     .option(
-      "--diamond-gas-limit <number>",
+      "--cutter-gaslimit <number>",
       "set this when running without --commit, the diamond will revert unless the facets are actually deployed",
-      3500000
+      // 3500000
     )
 
     .option(
@@ -71,6 +70,13 @@ export function addDeployNewDiamond(program) {
       "--facets-deployed <filename>",
       `a json file containing a map of facet name to deployed addresses {facet: {address: 0x00...}}.`
     )
+    .option(
+      "--save-facets-deployed <filename>",
+      `
+save the accumulation of --facets-deployed with any newly deployed facets to
+this file. The same file can be used for both options.`
+    )
+
     .action((options) => deployNewDiamond(program, options));
 }
 
@@ -100,13 +106,14 @@ export async function deployNewDiamond(program, options) {
   const cuts = readJson(options.facets ?? "facets.json").map(
     (o) => new FacetCutOpts(o)
   );
+  const facetsDeployedFilename = options.facetsDeployed;
   if (options.facetsDeployed)
     options.facetsDeployed = readJson(options.facetsDeployed);
   else options.facetsDeployed = {};
 
   const deployer = new DiamondDeployer(r, signer, readers, options);
 
-  const isOffline = () => !deploykey || !!opts.commit;
+  const isOffline = () => !deploykey || !opts.commit;
 
   const exit = (msg, code = undefined) => {
     // if there are errors co-erce any code not > 0 (including undefined) to 1.
@@ -129,14 +136,21 @@ export async function deployNewDiamond(program, options) {
 
   // To force a new deploy, we just don't look for the old one.
   await deployer.processERC2535Cuts(cuts);
-  await deployer.processCuts(cuts);
+  const deployedFacets = await deployer.processCuts(cuts);
+  if (options.saveFacetsDeployed) {
+    try {
+      writeJson(facetsDeployedFilename, {...options.facetsDeployed, ...deployedFacets});
+    } catch (err) {
+      console.log(`failed to save deployed facets: ${err}`);
+    }
+  }
   var result = { msg: "not deployed" };
   if (deployer.canDeploy()) {
     result = await deployer.deploy();
     if (result.isErr()) exit(result.errmsg(), 1);
   }
 
-  if (isOffline()) {
+  if (isOffline() && options.verbose) {
     deployer.report();
   }
   exitok(result.msg);

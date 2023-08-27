@@ -4,6 +4,32 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "arenastate deploy:new",
+      "skipFiles": ["<node_internals>/**"],
+      "cwd": "${workspaceFolder:chaintrap-arenastate}",
+      "program": "${workspaceFolder}/deploycli.js",
+      "args": [
+          "-u", "http://127.0.0.1:8545",
+          "-d", "hardhat:0",
+          "diamond-new",
+            "--replace",
+            "--legacy",
+            "--diamond-owner-key", "hardhat:1", 
+            "--diamond-init-name", "DiamondNew",
+            "--diamond-init-args",
+              "[{\"typeURIs\": [\"GAME_TYPE\", \"TRANSCRIPT_TYPE\", \"FURNITURE_TYPE\"]}]",
+            "--facets", "diamond-deploy.json",
+            "--facets-deployed=facets-deployed.json",
+            "--save-facets-deployed=facets-deployed.json",
+            "--gasprice", "0.00015",
+            "--commit"
+      ]
+    }
+
     {
       "type": "node",
       "request": "launch",

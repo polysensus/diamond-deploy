@@ -23,6 +23,12 @@ export function readJson(filename) {
   return JSON.parse(fs.readFileSync(filename, "utf-8"));
 }
 
+export function writeJson(filename, data) {
+  if (typeof data !== 'string')
+    data = JSON.stringify(data, null, '  ');
+  return writeText(filename, data);
+}
+
 export function readBinary(filename) {
   return fs.readFileSync(filename, null);
 }
