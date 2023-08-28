@@ -12,7 +12,7 @@ tasks:
     desc: create patch release
     cmds:
       - |
-        npm run release -- -i patch
+        npm run release -- -i patch --ci
   build:
     desc: build the package
     cmds:
