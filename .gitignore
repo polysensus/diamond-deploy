@@ -6,5 +6,5 @@ facets-deployed-2.json
 .env.opgoerli
 facets.json
 exclude.json
-dist
+dist/**
 node_modules

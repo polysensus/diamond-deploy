@@ -30,7 +30,7 @@ export function addDeployNewDiamond(program) {
     // "UNPREDICTABLE_GAS_LIMIT" due to the revert
     .option(
       "--cutter-gaslimit <number>",
-      "set this when running without --commit, the diamond will revert unless the facets are actually deployed",
+      "set this when running without --commit, the diamond will revert unless the facets are actually deployed"
       // 3500000
     )
 
@@ -139,7 +139,10 @@ export async function deployNewDiamond(program, options) {
   const deployedFacets = await deployer.processCuts(cuts);
   if (options.saveFacetsDeployed) {
     try {
-      writeJson(facetsDeployedFilename, {...options.facetsDeployed, ...deployedFacets});
+      writeJson(facetsDeployedFilename, {
+        ...options.facetsDeployed,
+        ...deployedFacets,
+      });
     } catch (err) {
       console.log(`failed to save deployed facets: ${err}`);
     }

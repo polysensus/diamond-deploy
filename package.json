@@ -1,7 +1,7 @@
 {
   "name": "@polysensus/diamond-deploy",
   "type": "module",
-  "version": "0.3.2",
+  "version": "0.3.1",
   "description": "deployment library and tool for ERC 2535 diamond standard",
   "main": "dist/diamond-deploy.cjs",
   "module": "dist/diamond-deploy.esm.js",
@@ -17,13 +17,14 @@
     "lib": "src/lib"
   },
   "scripts": {
+    "release": "release-it",
     "test": "vitest run",
     "test-watch": "vitest",
     "prepare": "rollup -c",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
-    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
+    "lint": "prettier --ignore-path .gitignore  --ignore-path .prettierignore --check --plugin-search-dir=. .",
+    "format": "prettier --ignore-path .gitignore  --ignore-path .prettierignore --write --plugin-search-dir=. ."
   },
   "repository": {
     "type": "git",
@@ -43,10 +44,38 @@
     "url": "https://github.com/polysensus/diamond-deploy/issues"
   },
   "homepage": "https://github.com/polysensus/diamond-deploy#readme",
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release v${version}"
+    },
+    "github": {
+      "release": true
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "infile": "CHANGELOG.md",
+        "preset": {
+          "name": "conventionalcommits",
+          "types": [
+            {
+              "type": "feat",
+              "section": "Features"
+            },
+            {
+              "type": "fix",
+              "section": "Changes"
+            },
+            {}
+          ]
+        }
+      }
+    }
+  },
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
     "@babel/plugin-syntax-import-assertions": "^7.20.0",
     "@eth-optimism/sdk": "^2.0.2",
+    "@release-it/conventional-changelog": "^7.0.0",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.0.1",
@@ -59,6 +88,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.1.1",
     "prettier": "^2.8.4",
+    "release-it": "^16.1.5",
     "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "rollup-plugin-polyfill-node": "^0.12.0",

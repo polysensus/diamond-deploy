@@ -333,7 +333,7 @@ export class DiamondDeployer {
         );
         if (isError(result)) continue;
         facetAddress = result.address;
-        deployedFacets[co.name] = {facetAddress};
+        deployedFacets[co.name] = { facetAddress };
       }
       co.address = facetAddress;
 
@@ -503,7 +503,7 @@ export class DiamondDeployer {
       }
     }
 
-    let overrides = {}
+    let overrides = {};
     if (this.options.cutterGasLimit)
       overrides.gasLimit = Number.parseInt(this.options?.cutterGasLimit);
     overrides = await this.txOverrides(overrides);
@@ -514,8 +514,7 @@ export class DiamondDeployer {
       initCalldata ?? "0x",
       overrides
     );
-    if (this.options.verbose)
-      console.log(tx)
+    if (this.options.verbose) console.log(tx);
     const receipt = await tx.wait();
     if (!receipt.status)
       return DeployResult.fromFaiedReceipt(
@@ -535,30 +534,26 @@ export class DiamondDeployer {
   }
 
   async txOverrides(overrides, signer) {
-
     if (!overrides?.gasLimit && this.options?.gaslimit)
       overrides.gasLimit = Number.parseInt(this.options?.gaslimit);
     if (!overrides.gasPrice && this.options?.gasprice)
-      overrides.gasPrice = ethers.utils.parseUnits(
-        this.options?.gasprice,
-        "gwei"
-      ).toNumber();
-    if (typeof overrides?.type !== 'undefined' && this.options?.legacy) overrides.type = 0;
+      overrides.gasPrice = ethers.utils
+        .parseUnits(this.options?.gasprice, "gwei")
+        .toNumber();
+    if (typeof overrides?.type !== "undefined" && this.options?.legacy)
+      overrides.type = 0;
 
     if (this.options?.replace && signer) {
       const pendingNonce = await signer.getTransactionCount("pending");
       const current = await signer.getTransactionCount();
       if (pendingNonce != current) {
         this.r.out(
-          `${
-            pendingNonce - current
-          } pending transaction, replacing ${current}`
+          `${pendingNonce - current} pending transaction, replacing ${current}`
         );
         overrides.nonce = current;
       }
     }
-    if (this.options.verbose)
-      console.log(overrides);
+    if (this.options.verbose) console.log(overrides);
     return overrides;
   }
 
@@ -586,8 +581,7 @@ export class DiamondDeployer {
       }
       overrides = await this.txOverrides(overrides);
 
-      if (Object.keys(overrides).length > 0)
-        args.push(overrides);
+      if (Object.keys(overrides).length > 0) args.push(overrides);
 
       // facets are not allowed constructor arguments
       const deployer = this.options.commit
@@ -603,7 +597,7 @@ export class DiamondDeployer {
           co,
           nonce: overrides?.nonce ?? undefined,
         },
-        ... args
+        ...args
       );
       this.r.out(msg);
       this.results.push({ tx, msg, co });

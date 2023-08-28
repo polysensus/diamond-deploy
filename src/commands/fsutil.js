@@ -24,8 +24,7 @@ export function readJson(filename) {
 }
 
 export function writeJson(filename, data) {
-  if (typeof data !== 'string')
-    data = JSON.stringify(data, null, '  ');
+  if (typeof data !== "string") data = JSON.stringify(data, null, "  ");
   return writeText(filename, data);
 }
 
