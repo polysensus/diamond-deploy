@@ -32,28 +32,3 @@ jobs:
       - name: unit tests
         run: |
           echo "No tests defined yet ..."
-
-      - name: publish npm package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_DIAMOND_DEPLOY_PUBLISH }}
-        if: contains(github.ref, 'refs/tags/') && github.event_name == 'push'
-        run: |
-
-          npm config list
-
-          # github has scale issues when there are a large (> 20 ) npm packages in
-          # a repo, so force for fixes seems like the right thing for now.
-          FORCE=""
-          if [[ ! $(git log -1 --pretty=%B) =~ '^release:v' ]]; then
-            export FORCE=--force
-          fi
-          npm publish $FORCE --access public
-
-      # this didn't work, despite looking like jest/junit format the reporter
-      # crashed when looking at the time property
-      # https://github.com/marketplace/actions/test-reporter
-      # - uses: actions/upload-artifact@v2
-      #   if: success() || failure() # even if previous failed
-      #   with:
-      #     name: test-results
-      #     path: chaintrap-arenastate/jest-junit.xml

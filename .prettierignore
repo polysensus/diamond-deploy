@@ -1,3 +1,4 @@
 # supplimental to .gitignore
 CHANGELOG.md
 .vscode
+dist/
